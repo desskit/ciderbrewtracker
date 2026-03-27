@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#412402" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cider Log" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Cider Log</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cider: #C4711A; --cider-light: #FAEEDA; --cider-mid: #EF9F27;
+      --cider-dark: #633806; --cider-deep: #412402;
+      --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #085041;
+      --text: #1a1a1a; --text-muted: #666; --border: rgba(0,0,0,0.12);
+      --surface: #fff; --bg: #f5f0eb;
+    }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
+
+    /* HERO */
+    .hero { background: #412402; padding: env(safe-area-inset-top, 12px) 1.25rem 1rem; }
+    .hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .hero-title { font-size: 22px; font-weight: 600; color: #FAC775; letter-spacing: -0.3px; }
+    .hero-sub { font-size: 13px; color: #EF9F27; }
+    .hero-badge { background: #633806; color: #FAC775; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .apple-strip { display: flex; gap: 6px; margin-top: 10px; }
+    .apple { width: 10px; height: 10px; border-radius: 50%; background: #EF9F27; opacity: 0.25; }
+    .apple.filled { opacity: 1; }
+
+    /* TABS */
+    .tab-bar { display: flex; background: #2C1800; border-bottom: 1px solid #412402; position: sticky; top: 0; z-index: 10; }
+    .tab { flex: 1; text-align: center; padding: 13px 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: #BA7517; border-bottom: 2px solid transparent; font-family: inherit; }
+    .tab.active { color: #FAC775; border-bottom-color: #EF9F27; }
+
+    /* CONTENT */
+    .body-pad { padding: 1rem; flex: 1; }
+    .section { display: none; }
+    .section.visible { display: block; }
+
+    /* FILTER */
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+    .filter-btn { flex: 1; padding: 9px 0; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: inherit; }
+    .filter-btn.active { background: #FAEEDA; color: #633806; border-color: #EF9F27; }
+
+    /* CARDS */
+    .batch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #EF9F27; }
+    .batch-card.status-secondary { border-left-color: #BA7517; }
+    .batch-card.status-bottled { border-left-color: #B4B2A9; }
+    .batch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .batch-name { font-size: 15px; font-weight: 600; }
+    .batch-date { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .status-pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .sp-primary { background: #E1F5EE; color: #085041; }
+    .sp-secondary { background: #FAEEDA; color: #633806; }
+    .sp-bottled { background: #f0ede8; color: #5F5E5A; }
+    .meta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .meta { font-size: 12px; color: var(--text-muted); }
+    .meta b { color: var(--text); font-weight: 600; }
+    .abv-pill { background: #E1F5EE; color: #085041; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
+
+    /* FORMS */
+    .form-wrap { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+    .form-section-label { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #FAEEDA; }
+    .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .form-group { margin-bottom: 12px; }
+    input, select, textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; background: var(--surface); color: var(--text); font-family: inherit; -webkit-appearance: none; }
+    input:focus, textarea:focus { outline: none; border-color: #EF9F27; box-shadow: 0 0 0 3px rgba(239,159,39,0.15); }
+    textarea { resize: vertical; min-height: 72px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-primary { background: #412402; color: #FAC775; border: none; border-radius: 10px; padding: 14px 0; width: 100%; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-primary:active { background: #633806; }
+    .btn-secondary { background: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; padding: 12px 0; width: 100%; font-size: 15px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+
+    /* DETAIL */
+    .back-btn { background: none; border: none; font-size: 14px; color: #BA7517; cursor: pointer; padding: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 4px; font-family: inherit; font-weight: 600; }
+    .detail-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+    .detail-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1rem; }
+    .stage-timer { border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+    .stage-timer.s-primary { background: #E1F5EE; border: 1px solid #9FE1CB; }
+    .stage-timer.s-secondary { background: #FAEEDA; border: 1px solid #FAC775; }
+    .stage-timer-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+    .stage-timer.s-primary .stage-timer-label { color: #0F6E56; }
+    .stage-timer.s-secondary .stage-timer-label { color: #854F0B; }
+    .stage-timer-name { font-size: 14px; font-weight: 600; }
+    .stage-timer.s-primary .stage-timer-name { color: #04342C; }
+    .stage-timer.s-secondary .stage-timer-name { color: #412402; }
+    .stage-timer-since { font-size: 12px; margin-top: 2px; }
+    .stage-timer.s-primary .stage-timer-since { color: #0F6E56; }
+    .stage-timer.s-secondary .stage-timer-since { color: #854F0B; }
+    .stage-days { text-align: right; }
+    .stage-days-num { font-size: 40px; font-weight: 700; line-height: 1; }
+    .stage-timer.s-primary .stage-days-num { color: #085041; }
+    .stage-timer.s-secondary .stage-days-num { color: #633806; }
+    .stage-days-unit { font-size: 12px; font-weight: 600; margin-top: 2px; }
+    .stage-timer.s-primary .stage-days-unit { color: #0F6E56; }
+    .stage-timer.s-secondary .stage-days-unit { color: #854F0B; }
+    .status-switcher { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 1.25rem; }
+    .status-opt { padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: inherit; line-height: 1.3; }
+    .status-opt.active.s-primary { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+    .status-opt.active.s-secondary { background: #FAEEDA; color: #633806; border-color: #EF9F27; }
+    .status-opt.active.s-bottled { background: #f0ede8; color: #444441; border-color: #B4B2A9; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+    .info-card { background: #FAEEDA; border-radius: 8px; padding: 10px 12px; }
+    .info-label { font-size: 11px; color: #854F0B; margin-bottom: 2px; font-weight: 600; }
+    .info-val { font-size: 14px; font-weight: 600; color: #412402; }
+    .section-head { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin: 1.25rem 0 10px; }
+    .add-sg { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .add-sg input { flex: 1; }
+    .add-sg button { background: #412402; color: #FAC775; border: none; border-radius: 8px; padding: 0 16px; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit; font-weight: 600; }
+    .chart-wrap { background: #f5f0eb; border-radius: 8px; padding: 12px; margin-bottom: 1rem; height: 180px; }
+    .sg-list { margin-bottom: 1.25rem; }
+    .sg-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .sg-date { color: var(--text-muted); }
+    .sg-val { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .sg-trend { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+    .sg-trend.down { background: #E1F5EE; color: #085041; }
+    .sg-trend.same { background: #f0ede8; color: #5F5E5A; }
+    .stage-history { border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.25rem; }
+    .stage-history-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .stage-history-row:last-child { border-bottom: none; }
+    .sh-left { display: flex; align-items: center; gap: 10px; }
+    .sh-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sh-dot.s-primary { background: #1D9E75; }
+    .sh-dot.s-secondary { background: #EF9F27; }
+    .sh-dot.s-bottled { background: #B4B2A9; }
+    .sh-name { font-size: 13px; font-weight: 600; }
+    .sh-dates { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .sh-duration { font-size: 13px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .sh-duration.ongoing { color: #1D9E75; }
+    .delete-btn { background: none; border: 1px solid #f5c6c6; color: #c0392b; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 14px; cursor: pointer; font-family: inherit; margin-top: 1rem; }
+
+    /* STATS */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+    .stat-card { background: #FAEEDA; border-radius: 8px; padding: 12px; }
+    .stat-label { font-size: 11px; color: #854F0B; font-weight: 600; margin-bottom: 4px; }
+    .stat-val { font-size: 24px; font-weight: 700; color: #412402; }
+    .stat-unit { font-size: 14px; color: #BA7517; font-weight: 400; }
+
+    /* EXPORT */
+    .export-btn { background: #FAEEDA; color: #633806; border: 1px solid #EF9F27; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px; }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 3rem 1rem; }
+    .empty-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .empty-sub { font-size: 13px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="hero">
+    <div class="hero-top">
+      <div><div class="hero-title">Cider Log</div><div class="hero-sub" id="hero-sub">0 brews tracked</div></div>
+      <div class="hero-badge" id="hero-badge">0 active</div>
+    </div>
+    <div class="apple-strip" id="apple-strip"></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('batches')">Brews</button>
+    <button class="tab" onclick="showTab('add')">+ New</button>
+    <button class="tab" onclick="showTab('stats')">Stats</button>
+  </div>
+
+  <div id="sec-batches" class="section visible body-pad">
+    <div class="filter-bar">
+      <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" id="filter-inprogress" onclick="setFilter('inprogress')">In progress</button>
+      <button class="filter-btn" id="filter-finished" onclick="setFilter('finished')">Finished</button>
+    </div>
+    <div id="batch-list"></div>
+  </div>
+
+  <div id="sec-add" class="section body-pad">
+    <div class="form-wrap">
+      <div class="form-section-label">Brew info</div>
+      <div class="form-group"><label class="form-label">Batch name / number</label><input id="f-name" placeholder="#3 — Summer Cider" /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Quantity</label><input id="f-qty" placeholder="1G" /></div>
+        <div class="form-group"><label class="form-label">Start date</label><input id="f-date" type="date" /></div>
+      </div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Ingredients</div>
+      <div class="form-group"><label class="form-label">Yeast used</label><input id="f-yeast" placeholder="Fleischmann's, EC-1118..." /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Sugar type</label><input id="f-sugar-type" placeholder="Brown sugar, honey..." /></div>
+        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="f-sugar-qty" placeholder="1 cup, 200g..." /></div>
+      </div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Fermentation</div>
+      <div class="form-group"><label class="form-label">Starting SG</label><input id="f-sg" placeholder="1.055" type="number" step="0.001" /></div>
+      <div class="form-group"><label class="form-label">Tasting notes</label><textarea id="f-notes" placeholder="Initial observations, aroma, flavour..."></textarea></div>
+    </div>
+    <button class="btn-primary" onclick="saveBatch()">Save brew</button>
+    <button class="btn-secondary" onclick="showTab('batches')">Cancel</button>
+  </div>
+
+  <div id="sec-stats" class="section body-pad">
+    <div class="stat-grid" id="stats-grid"></div>
+    <div class="chart-wrap" style="height:200px"><canvas id="stats-chart"></canvas></div>
+    <button class="export-btn" onclick="exportCSV()">Export all brews as CSV</button>
+  </div>
+
+  <div id="sec-detail" class="section body-pad">
+    <button class="back-btn" onclick="showTab('batches')">← All brews</button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+let batches=[], currentBatch=null, sgChart=null, statsChart=null, activeFilter='all';
+
+const STATUS={
+  primary:{label:'Primary fermentation',short:'Primary',cls:'sp-primary',cardCls:'',optCls:'s-primary',timerCls:'s-primary'},
+  secondary:{label:'Secondary / aging',short:'Secondary',cls:'sp-secondary',cardCls:'status-secondary',optCls:'s-secondary',timerCls:'s-secondary'},
+  bottled:{label:'Bottled / finished',short:'Bottled',cls:'sp-bottled',cardCls:'status-bottled',optCls:'s-bottled',timerCls:''}
+};
+
+function today(){return new Date().toISOString().slice(0,10);}
+function daysBetween(a,b){const da=new Date(a),db=new Date(b);da.setHours(0,0,0,0);db.setHours(0,0,0,0);return Math.floor((db-da)/86400000);}
+function daysSince(d){return d?daysBetween(d,today()):null;}
+function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day';return n===1?'1 day':n+' days';}
+
+function load(){
+  try{batches=JSON.parse(localStorage.getItem('cider_batches_v3')||'[]');}catch(e){batches=[];}
+  batches.forEach(b=>{
+    if(!b.status)b.status='primary';
+    if(!b.stageStartDates)b.stageStartDates={primary:b.startDate||today()};
+    if(!b.stageStartDates.primary)b.stageStartDates.primary=b.startDate||today();
+    if(!b.stageHistory)b.stageHistory=[];
+  });
+  renderBatches();updateHero();
+}
+function save(){localStorage.setItem('cider_batches_v3',JSON.stringify(batches));updateHero();}
+
+function updateHero(){
+  const active=batches.filter(b=>b.status!=='bottled').length;
+  document.getElementById('hero-sub').textContent=batches.length+' brew'+(batches.length!==1?'s':'')+' tracked';
+  document.getElementById('hero-badge').textContent=active+' active';
+  const dots=Math.min(batches.length,12);
+  document.getElementById('apple-strip').innerHTML=Array.from({length:Math.max(dots,3)},(_,i)=>`<div class="apple${i<dots?' filled':''}"></div>`).join('');
+}
+
+function setFilter(f){
+  activeFilter=f;
+  ['all','inprogress','finished'].forEach(k=>document.getElementById('filter-'+k).classList.toggle('active',k===f));
+  renderBatches();
+}
+
+function showTab(t){
+  ['batches','add','stats','detail'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
+  const labels={batches:'brews',add:'new',stats:'stats'};
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
+  if(t==='stats')renderStats();
+  if(t==='add')document.getElementById('f-date').value=today();
+}
+
+function showDetail(id){
+  currentBatch=batches.find(b=>b.id===id);
+  if(!currentBatch)return;
+  renderDetail();
+  ['batches','add','stats'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
+  document.getElementById('sec-detail').classList.add('visible');
+}
+
+function calcABV(b){
+  const og=parseFloat(b.startingSG);
+  const readings=b.sgReadings||[];
+  const fg=readings.length?parseFloat(readings[readings.length-1].val):NaN;
+  if(isNaN(og)||isNaN(fg)||fg>=og)return null;
+  return ((og-fg)*131.25).toFixed(1);
+}
+
+function filteredBatches(){
+  if(activeFilter==='inprogress')return batches.filter(b=>b.status!=='bottled');
+  if(activeFilter==='finished')return batches.filter(b=>b.status==='bottled');
+  return batches;
+}
+
+function renderBatches(){
+  const el=document.getElementById('batch-list');
+  const list=filteredBatches();
+  if(!list.length){
+    const msg=activeFilter==='finished'?'No finished brews yet.':activeFilter==='inprogress'?'No brews in progress.':'No brews yet. Tap "+ New" to get started.';
+    el.innerHTML=`<div class="empty"><div class="empty-title">${msg}</div></div>`;return;
+  }
+  el.innerHTML=list.slice().reverse().map(b=>{
+    const abv=calcABV(b);
+    const readings=b.sgReadings||[];
+    const lastSG=readings.length?readings[readings.length-1].val:(b.startingSG||'—');
+    const st=STATUS[b.status||'primary'];
+    const stageDate=(b.stageStartDates||{})[b.status];
+    const days=stageDate?daysSince(stageDate):null;
+    const dayStr=days!==null&&b.status!=='bottled'?(days===0?'today':days+'d in stage'):'';
+    return `<div class="batch-card ${st.cardCls}" onclick="showDetail('${b.id}')">
+      <div class="batch-row"><span class="batch-name">${b.name}</span><span class="status-pill ${st.cls}">${st.short}</span></div>
+      <div class="batch-date">${b.startDate||'No date'} · ${b.qty||'—'}${dayStr?' · '+dayStr:''}</div>
+      <div class="meta-row">
+        <span class="meta">Yeast: <b>${b.yeast||'—'}</b></span>
+        <span class="meta">SG: <b>${lastSG}</b></span>
+        ${abv?`<span class="abv-pill">~${abv}% ABV</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveBatch(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Please add a batch name.');return;}
+  const sg=document.getElementById('f-sg').value.trim();
+  const startDate=document.getElementById('f-date').value||today();
+  const b={
+    id:Date.now().toString(),name,
+    qty:document.getElementById('f-qty').value.trim(),startDate,
+    yeast:document.getElementById('f-yeast').value.trim(),
+    sugarType:document.getElementById('f-sugar-type').value.trim(),
+    sugarQty:document.getElementById('f-sugar-qty').value.trim(),
+    startingSG:sg,notes:document.getElementById('f-notes').value.trim(),
+    sgReadings:[],status:'primary',
+    stageStartDates:{primary:startDate},stageHistory:[]
+  };
+  if(sg)b.sgReadings.push({date:startDate,val:sg});
+  batches.push(b);save();
+  ['f-name','f-qty','f-yeast','f-sugar-type','f-sugar-qty','f-sg','f-notes'].forEach(id=>document.getElementById(id).value='');
+  renderBatches();showTab('batches');
+}
+
+function setStatus(s){
+  const prev=currentBatch.status;
+  if(prev===s)return;
+  const prevStart=(currentBatch.stageStartDates||{})[prev];
+  const duration=prevStart?daysBetween(prevStart,today()):null;
+  currentBatch.stageHistory=currentBatch.stageHistory||[];
+  currentBatch.stageHistory.push({stage:prev,startDate:prevStart||today(),endDate:today(),days:duration});
+  currentBatch.status=s;
+  if(!currentBatch.stageStartDates)currentBatch.stageStartDates={};
+  if(!currentBatch.stageStartDates[s])currentBatch.stageStartDates[s]=today();
+  const idx=batches.findIndex(b=>b.id===currentBatch.id);
+  if(idx>=0)batches[idx]=currentBatch;
+  save();renderDetail();renderBatches();
+}
+
+function stageTimerHTML(b){
+  const s=b.status;
+  if(s==='bottled')return'';
+  const st=STATUS[s];
+  const stageDate=(b.stageStartDates||{})[s];
+  const days=stageDate?daysSince(stageDate):null;
+  const numStr=days===null?'—':days===0?'<1':String(days);
+  const unit=days===1?'day':'days';
+  return `<div class="stage-timer ${st.timerCls}">
+    <div>
+      <div class="stage-timer-label">Time in stage</div>
+      <div class="stage-timer-name">${st.label}</div>
+      <div class="stage-timer-since">${stageDate?'since '+stageDate:'no date recorded'}</div>
+    </div>
+    <div class="stage-days"><div class="stage-days-num">${numStr}</div><div class="stage-days-unit">${unit}</div></div>
+  </div>`;
+}
+
+function stageHistoryHTML(b){
+  const history=b.stageHistory||[];
+  const cur=b.status;
+  const curStart=(b.stageStartDates||{})[cur];
+  const curDays=curStart?daysSince(curStart):null;
+  const rows=[...history.map(h=>({...h,ongoing:false})),{stage:cur,startDate:curStart||null,endDate:null,days:curDays,ongoing:cur!=='bottled'}];
+  if(!rows.length)return'';
+  const rowsHTML=rows.map(r=>{
+    const st=STATUS[r.stage]||STATUS.primary;
+    const dateRange=r.startDate?(r.endDate?r.startDate+' → '+r.endDate:r.startDate+' → now'):'—';
+    const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
+    return `<div class="stage-history-row">
+      <div class="sh-left"><div class="sh-dot s-${r.stage}"></div>
+        <div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div></div>
+      </div>
+      <div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div>
+    </div>`;
+  }).join('');
+  return `<div class="section-head">Stage history</div><div class="stage-history">${rowsHTML}</div>`;
+}
+
+function renderDetail(){
+  const b=currentBatch;
+  const abv=calcABV(b);
+  const readings=(b.sgReadings||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
+  const curStatus=b.status||'primary';
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-title">${b.name}</div>
+    <div class="detail-sub">Started ${b.startDate||'—'} · ${b.qty||'—'}</div>
+    ${stageTimerHTML(b)}
+    <div class="section-head">Status</div>
+    <div class="status-switcher">
+      ${Object.entries(STATUS).map(([k,v])=>`<button class="status-opt${curStatus===k?' active '+v.optCls:''}" onclick="setStatus('${k}')">${v.label}</button>`).join('')}
+    </div>
+    <div class="info-grid">
+      <div class="info-card"><div class="info-label">Yeast</div><div class="info-val">${b.yeast||'—'}</div></div>
+      <div class="info-card"><div class="info-label">Sugar</div><div class="info-val">${b.sugarType||'—'}${b.sugarQty?' ('+b.sugarQty+')':''}</div></div>
+      <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
+      <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
+    </div>
+    <div class="section-head">SG readings</div>
+    <div class="add-sg">
+      <input id="new-sg-date" type="date" value="${today()}" style="width:140px;flex:none" />
+      <input id="new-sg-val" placeholder="1.010" type="number" step="0.001" />
+      <button onclick="addSGReading()">+ Add</button>
+    </div>
+    <div class="chart-wrap"><canvas id="sg-chart"></canvas></div>
+    <div class="sg-list">
+      ${readings.length?readings.slice().reverse().map((r,i,arr)=>{
+        const prev=arr[i+1];
+        let trend='';
+        if(prev){const diff=parseFloat(r.val)-parseFloat(prev.val);trend=diff<-0.001?'<span class="sg-trend down">fermenting</span>':'<span class="sg-trend same">stable</span>';}
+        return `<div class="sg-row"><span class="sg-date">${r.date}</span><span class="sg-val">${r.val}${trend}</span></div>`;
+      }).join(''):'<div style="font-size:14px;color:#888;padding:8px 0">No readings yet.</div>'}
+    </div>
+    ${stageHistoryHTML(b)}
+    <div class="section-head">Tasting notes</div>
+    <textarea id="tasting-area" placeholder="Aroma, flavour, review...">${b.notes||''}</textarea>
+    <button class="btn-primary" style="margin-top:10px" onclick="saveNotes()">Save notes</button>
+    <button class="delete-btn" onclick="deleteBatch('${b.id}')">Delete brew</button>
+  `;
+  setTimeout(()=>renderSGChart(readings),50);
+}
+
+function addSGReading(){
+  const date=document.getElementById('new-sg-date').value||today();
+  const val=document.getElementById('new-sg-val').value.trim();
+  if(!val)return;
+  currentBatch.sgReadings=currentBatch.sgReadings||[];
+  currentBatch.sgReadings.push({date,val});
+  currentBatch.sgReadings.sort((a,b)=>a.date.localeCompare(b.date));
+  const idx=batches.findIndex(b=>b.id===currentBatch.id);
+  if(idx>=0)batches[idx]=currentBatch;
+  save();renderDetail();
+}
+
+function saveNotes(){
+  currentBatch.notes=document.getElementById('tasting-area').value;
+  const idx=batches.findIndex(b=>b.id===currentBatch.id);
+  if(idx>=0)batches[idx]=currentBatch;
+  save();
+  const btn=event.target;
+  btn.textContent='Saved!';btn.style.background='#1D9E75';
+  setTimeout(()=>{btn.textContent='Save notes';btn.style.background='#412402';},1400);
+}
+
+function deleteBatch(id){
+  if(!confirm('Delete this brew?'))return;
+  batches=batches.filter(b=>b.id!==id);
+  save();renderBatches();showTab('batches');
+}
+
+function renderSGChart(readings){
+  const ctx=document.getElementById('sg-chart');
+  if(!ctx)return;
+  if(sgChart){sgChart.destroy();sgChart=null;}
+  if(!readings.length)return;
+  const sorted=readings.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  sgChart=new Chart(ctx,{type:'line',data:{
+    labels:sorted.map(r=>r.date),
+    datasets:[{label:'SG',data:sorted.map(r=>parseFloat(r.val)),borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',pointBackgroundColor:'#C4711A',pointRadius:5,tension:0.35,fill:true}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    x:{ticks:{font:{size:11}},grid:{display:false}},
+    y:{ticks:{font:{size:11}},grid:{color:'rgba(196,113,26,0.1)'}}
+  }}});
+}
+
+function renderStats(){
+  const active=batches.filter(b=>b.status!=='bottled').length;
+  const abvVals=batches.map(b=>calcABV(b)).filter(Boolean).map(Number);
+  const avgABV=abvVals.length?(abvVals.reduce((a,b)=>a+b,0)/abvVals.length).toFixed(1):'—';
+  const yeasts={};
+  batches.forEach(b=>{if(b.yeast)yeasts[b.yeast]=(yeasts[b.yeast]||0)+1;});
+  const topYeast=Object.entries(yeasts).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total brews</div><div class="stat-val">${batches.length}</div></div>
+    <div class="stat-card"><div class="stat-label">In progress</div><div class="stat-val">${active}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg ABV</div><div class="stat-val">${avgABV}<span class="stat-unit">%</span></div></div>
+    <div class="stat-card"><div class="stat-label">Top yeast</div><div class="stat-val" style="font-size:14px">${topYeast?topYeast[0]:'—'}</div></div>
+  `;
+  const ctx=document.getElementById('stats-chart');
+  if(statsChart){statsChart.destroy();statsChart=null;}
+  const abvData=batches.filter(b=>calcABV(b)).map(b=>({name:b.name,abv:parseFloat(calcABV(b))}));
+  if(!abvData.length)return;
+  statsChart=new Chart(ctx,{type:'bar',data:{
+    labels:abvData.map(b=>b.name),
+    datasets:[{label:'Est. ABV %',data:abvData.map(b=>b.abv),backgroundColor:'rgba(196,113,26,0.75)',borderColor:'#C4711A',borderWidth:1,borderRadius:4}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    x:{ticks:{font:{size:11}},grid:{display:false}},
+    y:{beginAtZero:true,ticks:{font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(196,113,26,0.1)'}}
+  }}});
+}
+
+function exportCSV(){
+  const rows=[['Batch','Quantity','Start date','Yeast','Sugar type','Sugar qty','Starting SG','Latest SG','Est. ABV%','Status','Notes']];
+  batches.forEach(b=>{
+    const readings=b.sgReadings||[];
+    const lastSG=readings.length?readings[readings.length-1].val:'';
+    rows.push([b.name,b.qty||'',b.startDate||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.startingSG||'',lastSG,calcABV(b)||'',STATUS[b.status]?.label||b.status,(b.notes||'').replace(/"/g,'""')]);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='cider-log.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+
+document.getElementById('f-date').value=today();
+load();
+</script>
+</body>
+</html>

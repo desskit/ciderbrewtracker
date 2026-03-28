@@ -771,7 +771,10 @@ function toggleCollapse(id){
 
 function collapseState(id){
   const states=JSON.parse(localStorage.getItem('cider_collapse')||'{}');
-  return states[id]!==false; // default open
+  // If user has never touched it, default closed (undefined → false)
+  // If user has explicitly set it, use their preference
+  if(!(id in states)) return false;
+  return states[id];
 }
 
 function collapsibleSection(id, label, innerHTML){

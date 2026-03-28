@@ -19,6 +19,26 @@
       --text: #1a1a1a; --text-muted: #666; --border: rgba(0,0,0,0.12);
       --surface: #fff; --bg: #f5f0eb;
     }
+    [data-theme="dark"] {
+      --text: #f0ead8; --text-muted: #a89880; --border: rgba(255,255,255,0.1);
+      --surface: #2a1f14; --bg: #1a1208;
+    }
+    [data-theme="dark"] .hero { background: #2a1500; }
+    [data-theme="dark"] .tab-bar { background: #1a0e00; border-bottom-color: #2a1500; }
+    [data-theme="dark"] .batch-card { background: #2a1f14; }
+    [data-theme="dark"] .form-wrap { background: #2a1f14; }
+    [data-theme="dark"] .ing-section { background: #2a1f14; }
+    [data-theme="dark"] .log-list { background: #2a1f14; }
+    [data-theme="dark"] .stage-history { background: #2a1f14; }
+    [data-theme="dark"] .stage-history-row { background: #2a1f14; }
+    [data-theme="dark"] .info-card { background: #3a2510; }
+    [data-theme="dark"] .stat-card { background: #3a2510; }
+    [data-theme="dark"] .stage-timer.s-primary { background: #0d2b20; border-color: #1D9E75; }
+    [data-theme="dark"] .stage-timer.s-secondary { background: #2a1a00; border-color: #EF9F27; }
+    [data-theme="dark"] .chart-wrap { background: #221810; }
+    [data-theme="dark"] .overdue-banner { background: #2d0f0f; border-color: #c0392b; }
+    [data-theme="dark"] .due-today-banner { background: #2a1a00; border-color: #EF9F27; }
+    [data-theme="dark"] body { background-image: none; }
     html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
     .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
 
@@ -208,6 +228,7 @@
     .delete-btn { background: none; border: 1px solid #f5c6c6; color: #c0392b; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 14px; cursor: pointer; font-family: inherit; margin-top: 1rem; }
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+    .stat-card [style*='grid-column:span 2'] { grid-column: span 2; }
     .stat-card { background: #FAEEDA; border-radius: 8px; padding: 12px; }
     .stat-label { font-size: 11px; color: #854F0B; font-weight: 600; margin-bottom: 4px; }
     .stat-val { font-size: 24px; font-weight: 700; color: #412402; }
@@ -330,7 +351,7 @@
       </g>
 
       <!-- carboy silhouette: wider, shorter, tucked right -->
-      <g transform="translate(140, 8)" opacity="0.6">
+      <g transform="translate(140, 18)" opacity="0.6">
         <!-- neck - wider -->
         <rect x="15" y="0" width="10" height="7" rx="2.5" fill="#FAC775"/>
         <!-- body: wide shoulders, squat body -->
@@ -365,6 +386,12 @@
           <animate attributeName="r" values="1.5;3;1.5" dur="2.2s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values="0.7;0.1;0.7" dur="2.2s" repeatCount="indefinite"/>
         </circle>
+      </g>
+      <!-- gear icon for settings -->
+      <g transform="translate(172, 4)" opacity="0.75" style="cursor:pointer" onclick="showTab('settings')">
+        <circle cx="10" cy="10" r="9" fill="#633806"/>
+        <path d="M10 6.5 A3.5 3.5 0 1 1 10 13.5 A3.5 3.5 0 0 1 10 6.5Z" fill="none" stroke="#FAC775" stroke-width="1.4"/>
+        <path d="M10 3.5 L10 5M10 15 L10 16.5M3.5 10 L5 10M15 10 L16.5 10M5.4 5.4 L6.5 6.5M13.5 13.5 L14.6 14.6M14.6 5.4 L13.5 6.5M6.5 13.5 L5.4 14.6" stroke="#FAC775" stroke-width="1.4" stroke-linecap="round"/>
       </g>
     </svg>
     <div class="hero-top">
@@ -456,11 +483,9 @@
     <div class="stat-grid" id="stats-grid"></div>
     <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>ABV by batch</div>
     <div class="chart-wrap" style="height:200px"><canvas id="stats-chart"></canvas></div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-      <button class="export-btn" onclick="exportJSON()">Backup all data (JSON)</button>
-      <button class="export-btn" style="background:none;border-color:var(--border);color:var(--text-muted)" onclick="exportCSV()">Export as CSV (for spreadsheets)</button>
-      <button class="export-btn" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5" onclick="triggerImport()">Import from backup</button>
-      <input type="file" id="import-file-input" accept=".json,.csv" style="display:none" onchange="handleImport(event)"/>
+    <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.08em;margin:1.25rem 0 10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>Brewing activity</div>
+    <div style="background:var(--surface);border-radius:var(--border-radius-lg);border:0.5px solid var(--border);padding:12px;overflow-x:auto;margin-bottom:1rem">
+      <div id="brew-heatmap"></div>
     </div>
   </div>
 
@@ -527,6 +552,46 @@
     <div id="recipe-detail-content"></div>
   </div>
 
+  <!-- SETTINGS -->
+  <div id="sec-settings" class="section body-pad">
+    <div style="padding:12px 0 4px">
+      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Settings</div>
+      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);margin-bottom:16px;opacity:0.4"></div>
+    </div>
+
+    <div class="form-wrap" style="margin-bottom:1rem">
+      <div class="form-section-label">Appearance</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text)">Dark mode</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Override system theme</div>
+        </div>
+        <button id="dark-toggle" onclick="toggleDarkMode()" style="width:52px;height:28px;border-radius:14px;border:none;cursor:pointer;position:relative;transition:background 0.2s;font-family:inherit;flex-shrink:0">
+          <span id="dark-knob" style="position:absolute;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-wrap" style="margin-bottom:1rem">
+      <div class="form-section-label">Data</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="export-btn" onclick="exportJSON()">Backup all data (JSON)</button>
+        <button class="export-btn" style="background:none;border-color:var(--border);color:var(--text-muted)" onclick="exportCSV()">Export as CSV (for spreadsheets)</button>
+        <button class="export-btn" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5" onclick="triggerImport()">Import from backup</button>
+        <input type="file" id="import-file-input" accept=".json,.csv" style="display:none" onchange="handleImport(event)"/>
+      </div>
+    </div>
+
+    <div class="form-wrap">
+      <div class="form-section-label">About</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+        <b style="color:var(--text)">Cider Log</b> — Craft Cider Tracker<br>
+        All data stored locally on your device.<br>
+        Use JSON backup to transfer between devices.
+      </div>
+    </div>
+  </div>
+
   <!-- COMPARE -->
   <div id="sec-compare" class="section body-pad">
     <div style="padding:12px 0 4px">
@@ -565,6 +630,34 @@ function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day
 function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';if(d.date===today())return'due-today';return'upcoming';}
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
+/* ---- DARK MODE ---- */
+function applyTheme(dark){
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  localStorage.setItem('cider_dark_mode', dark?'1':'0');
+  updateDarkToggleUI();
+}
+
+function toggleDarkMode(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  applyTheme(!isDark);
+}
+
+function updateDarkToggleUI(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const btn=document.getElementById('dark-toggle');
+  const knob=document.getElementById('dark-knob');
+  if(!btn||!knob)return;
+  btn.style.background=isDark?'#EF9F27':'#ccc';
+  knob.style.left=isDark?'27px':'3px';
+}
+
+function initTheme(){
+  const saved=localStorage.getItem('cider_dark_mode');
+  if(saved!==null){applyTheme(saved==='1');return;}
+  const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(prefersDark);
+}
+
 function load(){
   try{batches=JSON.parse(localStorage.getItem('cider_batches_v3')||'[]');}catch(e){batches=[];}
   try{recipes=JSON.parse(localStorage.getItem('cider_recipes_v1')||'[]');}catch(e){recipes=[];}
@@ -601,13 +694,14 @@ function setFilter(f){
 }
 
 function showTab(t){
-  ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
-  const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare'};
+  ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare','settings'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
+  const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare',settings:'__none__'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
   if(t==='stats')renderStats();
   if(t==='add')document.getElementById('f-date').value=today();
   if(t==='recipes')renderRecipes();
   if(t==='compare')initCompare();
+  if(t==='settings')updateDarkToggleUI();
 }
 
 function showDetail(id){
@@ -1205,30 +1299,113 @@ function renderSGChart(readings){
 function renderStats(){
   const active=batches.filter(b=>b.status!=='bottled').length;
   const abvVals=batches.map(b=>calcABV(b)).filter(Boolean).map(Number);
-  const avgABV=abvVals.length?(abvVals.reduce((a,b)=>a+b,0)/abvVals.length).toFixed(1):'—';
+  const avgABV=abvVals.length?(abvVals.reduce((a,b)=>a+b,0)/abvVals.length).toFixed(2):'—';
   const yeasts={};batches.forEach(b=>{if(b.yeast)yeasts[b.yeast]=(yeasts[b.yeast]||0)+1;});
   const topYeast=Object.entries(yeasts).sort((a,b)=>b[1]-a[1])[0];
+
+  const highestABV=abvVals.length?Math.max(...abvVals).toFixed(2):null;
+  const highestABVBatch=highestABV?batches.find(b=>calcABV(b)===highestABV):null;
+
+  const ages=batches.map(b=>{
+    if(!b.startDate)return null;
+    return daysBetween(b.startDate,today());
+  }).filter(n=>n!==null);
+  const avgAge=ages.length?Math.round(ages.reduce((a,n)=>a+n,0)/ages.length):null;
+  const maxAge=ages.length?Math.max(...ages):null;
+  const longestBatch=maxAge!==null?batches.find(b=>b.startDate&&daysBetween(b.startDate,today())===maxAge):null;
+
   const brewIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2 C7 0 4 1 3 4 C2 7 4 9 7 9 C8 9 8.5 8.5 9 7.5 C9.5 8.5 10 9 11 9 C14 9 16 7 15 4 C14 1 11 0 9 2Z" fill="#854F0B" opacity="0.6"/></svg>`;
   const activeIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#854F0B" stroke-width="1.2" opacity="0.6"/><path d="M9 5 L9 9 L12 11" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg>`;
   const abvIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 14 L7 4 L11 4 L14 14" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/><path d="M5.5 10 L12.5 10" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg>`;
   const yeastIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="4" stroke="#854F0B" stroke-width="1.2" opacity="0.6"/><circle cx="9" cy="9" r="1.5" fill="#854F0B" opacity="0.4"/></svg>`;
+  const trophyIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M6 2 L12 2 L12 9 C12 12 9 14 9 14 C9 14 6 12 6 9Z" stroke="#854F0B" stroke-width="1.2" fill="none" opacity="0.6"/><path d="M3 2 L6 2 L6 6 C4 6 3 5 3 4Z" stroke="#854F0B" stroke-width="1" fill="none" opacity="0.5"/><path d="M15 2 L12 2 L12 6 C14 6 15 5 15 4Z" stroke="#854F0B" stroke-width="1" fill="none" opacity="0.5"/><line x1="9" y1="14" x2="9" y2="16" stroke="#854F0B" stroke-width="1.2" opacity="0.6"/><line x1="6" y1="16" x2="12" y2="16" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg>`;
+  const calIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="13" rx="2" stroke="#854F0B" stroke-width="1.2" opacity="0.6"/><line x1="2" y1="7" x2="16" y2="7" stroke="#854F0B" stroke-width="1" opacity="0.5"/><line x1="6" y1="1" x2="6" y2="5" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/><line x1="12" y1="1" x2="12" y2="5" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg>`;
+  const clockIcon=`<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#854F0B" stroke-width="1.2" opacity="0.6"/><path d="M9 5 L9 9 L13 9" stroke="#854F0B" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg>`;
+
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${brewIcon}Total brews</div><div class="stat-val">${batches.length}</div></div>
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${activeIcon}In progress</div><div class="stat-val">${active}</div></div>
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${abvIcon}Avg ABV</div><div class="stat-val">${avgABV}<span class="stat-unit">%</span></div></div>
-    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${yeastIcon}Top yeast</div><div class="stat-val" style="font-size:14px">${topYeast?topYeast[0]:'—'}</div></div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${yeastIcon}Top yeast</div><div class="stat-val" style="font-size:13px">${topYeast?topYeast[0]:'—'}</div></div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${trophyIcon}Highest ABV</div><div class="stat-val">${highestABV||'—'}${highestABV?'<span class="stat-unit">%</span>':''}</div>${highestABVBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${highestABVBatch.name}</div>`:''}</div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${calIcon}Longest batch</div><div class="stat-val">${maxAge!==null?maxAge:'—'}${maxAge!==null?'<span class="stat-unit">d</span>':''}</div>${longestBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${longestBatch.name}</div>`:''}</div>
+    <div class="stat-card" style="grid-column:span 2"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${clockIcon}Avg batch age</div><div class="stat-val">${avgAge!==null?avgAge:'—'}${avgAge!==null?'<span class="stat-unit"> days</span>':''}</div></div>
   `;
+
   const ctx=document.getElementById('stats-chart');
   if(statsChart){statsChart.destroy();statsChart=null;}
   const abvData=batches.filter(b=>calcABV(b)).map(b=>({name:b.name,abv:parseFloat(calcABV(b))}));
-  if(!abvData.length)return;
-  statsChart=new Chart(ctx,{type:'bar',data:{
-    labels:abvData.map(b=>b.name),
-    datasets:[{label:'Est. ABV %',data:abvData.map(b=>b.abv),backgroundColor:'rgba(196,113,26,0.75)',borderColor:'#C4711A',borderWidth:1,borderRadius:4}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
-    x:{ticks:{font:{size:11}},grid:{display:false}},
-    y:{beginAtZero:true,ticks:{font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(196,113,26,0.1)'}}
-  }}});
+  if(abvData.length){
+    statsChart=new Chart(ctx,{type:'bar',data:{
+      labels:abvData.map(b=>b.name),
+      datasets:[{label:'Est. ABV %',data:abvData.map(b=>b.abv),backgroundColor:'rgba(196,113,26,0.75)',borderColor:'#C4711A',borderWidth:1,borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{ticks:{font:{size:11}},grid:{display:false}},
+      y:{beginAtZero:true,ticks:{font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(196,113,26,0.1)'}}
+    }}});
+  }
+
+  renderHeatmap();
+}
+
+function renderHeatmap(){
+  const el=document.getElementById('brew-heatmap');
+  if(!el)return;
+  const now=new Date();
+  const weeksBack=26;
+  const days=weeksBack*7;
+  const startDate=new Date(now);
+  startDate.setDate(startDate.getDate()-days+1);
+
+  const dateMap={};
+  batches.forEach(b=>{
+    if(b.startDate)dateMap[b.startDate]=(dateMap[b.startDate]||0)+1;
+  });
+
+  const weeks=[];
+  let week=[];
+  let cur=new Date(startDate);
+  while(cur.getDay()!==0){cur.setDate(cur.getDate()-1);}
+  while(cur<=now){
+    const ds=cur.toISOString().slice(0,10);
+    const count=dateMap[ds]||0;
+    const isFuture=cur>now;
+    week.push({date:ds,count,isFuture});
+    if(week.length===7){weeks.push(week);week=[];}
+    cur.setDate(cur.getDate()+1);
+  }
+  if(week.length)weeks.push(week);
+
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let monthLabels='<div style="display:flex;gap:2px;padding-left:24px;margin-bottom:2px">';
+  let lastMonth=-1;
+  weeks.forEach((w,wi)=>{
+    const m=new Date(w[0].date).getMonth();
+    if(m!==lastMonth){monthLabels+=`<div style="width:14px;font-size:9px;color:var(--text-muted);text-align:center">${months[m]}</div>`;lastMonth=m;}
+    else monthLabels+=`<div style="width:14px"></div>`;
+  });
+  monthLabels+='</div>';
+
+  const dayLabels=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let grid='<div style="display:flex;gap:2px">';
+  grid+='<div style="display:flex;flex-direction:column;gap:2px;margin-right:2px">';
+  dayLabels.forEach((d,i)=>{
+    grid+=`<div style="height:14px;font-size:9px;color:var(--text-muted);line-height:14px;width:20px">${i%2===0?d:''}</div>`;
+  });
+  grid+='</div>';
+
+  weeks.forEach(w=>{
+    grid+='<div style="display:flex;flex-direction:column;gap:2px">';
+    w.forEach(d=>{
+      const col=d.isFuture?'transparent':d.count===0?'rgba(196,113,26,0.08)':d.count===1?'rgba(196,113,26,0.4)':'rgba(196,113,26,0.85)';
+      const border=d.isFuture?'none':'0.5px solid rgba(196,113,26,0.15)';
+      grid+=`<div title="${d.date}${d.count?' — '+d.count+' brew started':''}" style="width:14px;height:14px;border-radius:2px;background:${col};border:${border}"></div>`;
+    });
+    grid+='</div>';
+  });
+  grid+='</div>';
+
+  el.innerHTML=monthLabels+grid+`<div style="display:flex;align-items:center;gap:6px;margin-top:8px"><span style="font-size:10px;color:var(--text-muted)">Less</span><div style="width:10px;height:10px;border-radius:2px;background:rgba(196,113,26,0.08);border:0.5px solid rgba(196,113,26,0.15)"></div><div style="width:10px;height:10px;border-radius:2px;background:rgba(196,113,26,0.4)"></div><div style="width:10px;height:10px;border-radius:2px;background:rgba(196,113,26,0.85)"></div><span style="font-size:10px;color:var(--text-muted)">More</span></div>`;
 }
 
 /* ---- CSV EXPORT ---- */
@@ -1664,6 +1841,7 @@ function startBrewFromRecipe(id){
   document.getElementById('f-name').focus();
 }
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}
+initTheme();
 document.getElementById('f-date').value=today();
 load();
 </script>

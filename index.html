@@ -214,6 +214,8 @@
 
     .empty { text-align: center; padding: 3rem 1rem; }
     .empty-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .start-brew-btn { background: #412402; color: #FAC775; border: none; border-radius: 10px; padding: 14px 0; width: 100%; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 1rem; }
+    .start-brew-btn:active { background: #633806; }
   </style>
 </head>
 <body>
@@ -230,6 +232,7 @@
     <button class="tab active" onclick="showTab('batches')">Brews</button>
     <button class="tab" onclick="showTab('add')">+ New</button>
     <button class="tab" onclick="showTab('stats')">Stats</button>
+    <button class="tab" onclick="showTab('recipes')">Recipes</button>
   </div>
 
   <!-- BREWS LIST -->
@@ -298,11 +301,65 @@
     <button class="back-btn" onclick="showTab('batches')">← All brews</button>
     <div id="detail-content"></div>
   </div>
+
+  <!-- RECIPES LIST -->
+  <div id="sec-recipes" class="section body-pad">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:4px">
+      <span style="font-size:13px;color:var(--text-muted)" id="recipe-count">0 recipes</span>
+      <button class="edit-details-btn" onclick="showTab('recipe-add')">+ New recipe</button>
+    </div>
+    <div id="recipe-list"></div>
+  </div>
+
+  <!-- NEW / EDIT RECIPE FORM -->
+  <div id="sec-recipe-add" class="section body-pad">
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-title" id="recipe-form-title">New recipe</div>
+      </div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Recipe info</div>
+      <div class="form-group"><label class="form-label">Recipe name</label><input id="rf-name" placeholder="e.g. Classic Dry Cider" /></div>
+      <div class="form-group"><label class="form-label">Apple juice / base</label><input id="rf-juice" placeholder="Brand, type, volume..." /></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea id="rf-notes" placeholder="Style, target profile, tips..."></textarea></div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Pre-fermentation</div>
+      <p class="form-hint">Added to juice before pitching yeast</p>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Campden tablets</label><input id="rf-campden" placeholder="e.g. 1 tablet" /></div>
+        <div class="form-group"><label class="form-label">Pectic enzyme</label><input id="rf-pectic" placeholder="e.g. 0.5 tsp" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Acid blend</label><input id="rf-acid" placeholder="e.g. 1 tsp" /></div>
+      <div class="form-group"><label class="form-label">Other pre-ferm additions</label><input id="rf-preferm-other" placeholder="e.g. Bentonite, tannin..." /></div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">At pitch</div>
+      <p class="form-hint">Added when pitching yeast</p>
+      <div class="form-group"><label class="form-label">Yeast</label><input id="rf-yeast" placeholder="Fleischmann's, EC-1118..." /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Sugar type</label><input id="rf-sugar-type" placeholder="Brown sugar, honey..." /></div>
+        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="rf-sugar-qty" placeholder="200g, 1 cup..." /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Initial nutrient addition</label><input id="rf-initial-nutrient" placeholder="e.g. 2g Fermaid-O" /></div>
+      <div class="form-group"><label class="form-label">Other at-pitch additions</label><input id="rf-pitch-other" placeholder="e.g. Energizer, Go-Ferm..." /></div>
+    </div>
+    <button class="btn-primary" id="rf-save-btn" onclick="saveRecipe()">Save recipe</button>
+    <button class="btn-secondary" onclick="cancelRecipeForm()">Cancel</button>
+  </div>
+
+  <!-- RECIPE DETAIL -->
+  <div id="sec-recipe-detail" class="section body-pad">
+    <button class="back-btn" onclick="showTab('recipes')">← Recipes</button>
+    <div id="recipe-detail-content"></div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 let batches=[], currentBatch=null, sgChart=null, statsChart=null, activeFilter='all';
+let recipes=[], currentRecipe=null, editingRecipeId=null;
 
 const STATUS={
   primary:{label:'Primary fermentation',short:'Primary',cls:'sp-primary',cardCls:'',optCls:'s-primary',timerCls:'s-primary'},
@@ -319,6 +376,7 @@ function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.dat
 
 function load(){
   try{batches=JSON.parse(localStorage.getItem('cider_batches_v3')||'[]');}catch(e){batches=[];}
+  try{recipes=JSON.parse(localStorage.getItem('cider_recipes_v1')||'[]');}catch(e){recipes=[];}
   batches.forEach(b=>{
     if(!b.status)b.status='primary';
     if(!b.stageStartDates)b.stageStartDates={primary:b.startDate||today()};
@@ -332,6 +390,7 @@ function load(){
   renderBatches();updateHero();
 }
 function save(){localStorage.setItem('cider_batches_v3',JSON.stringify(batches));updateHero();}
+function saveRecipes(){localStorage.setItem('cider_recipes_v1',JSON.stringify(recipes));}
 
 function updateHero(){
   const active=batches.filter(b=>b.status!=='bottled').length;
@@ -348,11 +407,12 @@ function setFilter(f){
 }
 
 function showTab(t){
-  ['batches','add','stats','detail'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
-  const labels={batches:'brews',add:'new',stats:'stats'};
+  ['batches','add','stats','detail','recipes','recipe-add','recipe-detail'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
+  const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
   if(t==='stats')renderStats();
   if(t==='add')document.getElementById('f-date').value=today();
+  if(t==='recipes'){renderRecipes();}
 }
 
 function showDetail(id){
@@ -911,6 +971,164 @@ function exportCSV(){
   URL.revokeObjectURL(url);
 }
 
+
+/* ---- RECIPE FUNCTIONS ---- */
+
+function renderRecipes(){
+  const el=document.getElementById('recipe-list');
+  const cnt=document.getElementById('recipe-count');
+  if(cnt)cnt.textContent=recipes.length+' recipe'+(recipes.length!==1?'s':'');
+  if(!recipes.length){
+    el.innerHTML=`<div class="empty"><div class="empty-title">No recipes yet.</div><div class="empty-sub">Save a recipe to reuse your best brews.</div></div>`;
+    return;
+  }
+  el.innerHTML=recipes.map(r=>`
+    <div class="batch-card" style="border-left-color:#7F77DD" onclick="showRecipeDetail('${r.id}')">
+      <div class="batch-row">
+        <span class="batch-name">${r.name}</span>
+        <span class="status-pill" style="background:#EEEDFE;color:#3C3489">Recipe</span>
+      </div>
+      ${r.juice?`<div class="batch-date">${r.juice}</div>`:''}
+      <div class="meta-row">
+        ${r.yeast?`<span class="meta">Yeast: <b>${r.yeast}</b></span>`:''}
+        ${r.sugarType?`<span class="meta">Sugar: <b>${r.sugarType}</b></span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function showRecipeDetail(id){
+  currentRecipe=recipes.find(r=>r.id===id);
+  if(!currentRecipe)return;
+  renderRecipeDetail();
+  ['batches','add','stats','detail','recipes','recipe-add'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
+  document.getElementById('sec-recipe-detail').classList.add('visible');
+}
+
+function renderRecipeDetail(){
+  const r=currentRecipe;
+  const preferm=[
+    {name:'Campden tablets',val:r.campden},
+    {name:'Pectic enzyme',val:r.pectic},
+    {name:'Acid blend',val:r.acid},
+    {name:'Other',val:r.prefermOther},
+  ].filter(i=>i.val);
+  const atpitch=[
+    {name:'Yeast',val:r.yeast},
+    {name:'Sugar',val:r.sugarType?(r.sugarType+(r.sugarQty?' — '+r.sugarQty:'')):null},
+    {name:'Initial nutrient',val:r.initialNutrient},
+    {name:'Other',val:r.pitchOther},
+  ].filter(i=>i.val);
+
+  let ingHTML='<div class="ing-section">';
+  if(r.juice) ingHTML+=`<div class="ing-section-head">Base</div><div class="ing-row"><span class="ing-name">Apple juice / base</span><span class="ing-val">${r.juice}</span></div>`;
+  if(preferm.length){ingHTML+=`<div class="ing-section-head">Pre-fermentation</div>`;ingHTML+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');}
+  if(atpitch.length){ingHTML+=`<div class="ing-section-head">At pitch</div>`;ingHTML+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');}
+  ingHTML+='</div>';
+
+  document.getElementById('recipe-detail-content').innerHTML=`
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-title">${r.name}</div>
+        ${r.notes?`<div class="detail-sub" style="margin-top:4px;font-style:italic">${r.notes}</div>`:''}
+      </div>
+      <button class="edit-details-btn" onclick="openEditRecipe('${r.id}')">Edit</button>
+    </div>
+    ${ingHTML}
+    <button class="btn-primary" style="margin-top:1rem" onclick="startBrewFromRecipe('${r.id}')">Start brewing this recipe</button>
+    <button class="delete-btn" style="margin-top:8px" onclick="deleteRecipe('${r.id}')">Delete recipe</button>
+  `;
+}
+
+function showRecipeForm(recipe){
+  editingRecipeId=recipe?recipe.id:null;
+  document.getElementById('recipe-form-title').textContent=recipe?'Edit recipe':'New recipe';
+  document.getElementById('rf-save-btn').textContent=recipe?'Save changes':'Save recipe';
+  const fields={
+    'rf-name':recipe?.name||'',
+    'rf-juice':recipe?.juice||'',
+    'rf-notes':recipe?.notes||'',
+    'rf-campden':recipe?.campden||'',
+    'rf-pectic':recipe?.pectic||'',
+    'rf-acid':recipe?.acid||'',
+    'rf-preferm-other':recipe?.prefermOther||'',
+    'rf-yeast':recipe?.yeast||'',
+    'rf-sugar-type':recipe?.sugarType||'',
+    'rf-sugar-qty':recipe?.sugarQty||'',
+    'rf-initial-nutrient':recipe?.initialNutrient||'',
+    'rf-pitch-other':recipe?.pitchOther||''
+  };
+  Object.entries(fields).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
+  showTab('recipe-add');
+}
+
+function openEditRecipe(id){
+  const r=recipes.find(r=>r.id===id);
+  if(r)showRecipeForm(r);
+}
+
+function cancelRecipeForm(){
+  editingRecipeId?showTab('recipe-detail'):showTab('recipes');
+}
+
+function saveRecipe(){
+  const name=document.getElementById('rf-name').value.trim();
+  if(!name){alert('Please add a recipe name.');return;}
+  const data={
+    name,
+    juice:document.getElementById('rf-juice').value.trim(),
+    notes:document.getElementById('rf-notes').value.trim(),
+    campden:document.getElementById('rf-campden').value.trim(),
+    pectic:document.getElementById('rf-pectic').value.trim(),
+    acid:document.getElementById('rf-acid').value.trim(),
+    prefermOther:document.getElementById('rf-preferm-other').value.trim(),
+    yeast:document.getElementById('rf-yeast').value.trim(),
+    sugarType:document.getElementById('rf-sugar-type').value.trim(),
+    sugarQty:document.getElementById('rf-sugar-qty').value.trim(),
+    initialNutrient:document.getElementById('rf-initial-nutrient').value.trim(),
+    pitchOther:document.getElementById('rf-pitch-other').value.trim()
+  };
+  if(editingRecipeId){
+    const idx=recipes.findIndex(r=>r.id===editingRecipeId);
+    if(idx>=0){recipes[idx]={...recipes[idx],...data};currentRecipe=recipes[idx];}
+    saveRecipes();renderRecipeDetail();showTab('recipe-detail');
+  } else {
+    data.id=Date.now().toString();
+    recipes.push(data);
+    saveRecipes();renderRecipes();showTab('recipes');
+  }
+  editingRecipeId=null;
+}
+
+function deleteRecipe(id){
+  if(!confirm('Delete this recipe?'))return;
+  recipes=recipes.filter(r=>r.id!==id);
+  saveRecipes();showTab('recipes');
+}
+
+function startBrewFromRecipe(id){
+  const r=recipes.find(r=>r.id===id);
+  if(!r)return;
+  showTab('add');
+  const fields={
+    'f-juice':r.juice||'',
+    'f-campden':r.campden||'',
+    'f-pectic':r.pectic||'',
+    'f-acid':r.acid||'',
+    'f-preferm-other':r.prefermOther||'',
+    'f-yeast':r.yeast||'',
+    'f-sugar-type':r.sugarType||'',
+    'f-sugar-qty':r.sugarQty||'',
+    'f-initial-nutrient':r.initialNutrient||'',
+    'f-pitch-other':r.pitchOther||''
+  };
+  Object.entries(fields).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
+  document.getElementById('f-name').value='';
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-qty').value='';
+  document.getElementById('f-sg').value='';
+  document.getElementById('f-notes').value=r.notes?'From recipe: '+r.name:'';
+  document.getElementById('f-name').focus();
+}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}
 document.getElementById('f-date').value=today();
 load();

@@ -749,9 +749,7 @@ function curr(val){
 }
 
 function nukeAllData(){
-  if(!confirm('This will permanently delete ALL brews, recipes and settings. This cannot be undone.
-
-Are you absolutely sure?')) return;
+  if(!confirm('This will permanently delete ALL brews, recipes and settings. This cannot be undone. Are you absolutely sure?')) return;
   if(!confirm('Last chance — delete everything?')) return;
   localStorage.removeItem('cider_batches_v3');
   localStorage.removeItem('cider_recipes_v1');

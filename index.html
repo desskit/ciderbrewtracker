@@ -34,7 +34,7 @@
 
     /* TABS */
     .tab-bar { display: flex; background: #2C1800; border-bottom: 1px solid #412402; position: sticky; top: 0; z-index: 10; }
-    .tab { flex: 1; text-align: center; padding: 12px 2px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: none; color: #BA7517; border-bottom: 2px solid transparent; font-family: inherit; letter-spacing: -0.1px; }
+    .tab { flex: 1; text-align: center; padding: 11px 1px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: none; color: #BA7517; border-bottom: 2px solid transparent; font-family: inherit; letter-spacing: -0.2px; }
     .tab.active { color: #FAC775; border-bottom-color: #EF9F27; }
 
     .body-pad { padding: 1rem; flex: 1; }
@@ -386,6 +386,7 @@
     <button class="tab" onclick="showTab('add')">+ New</button>
     <button class="tab" onclick="showTab('stats')">Stats</button>
     <button class="tab" onclick="showTab('recipes')">Recipes</button>
+    <button class="tab" onclick="showTab('compare')">Compare</button>
   </div>
 
   <!-- BREWS LIST -->
@@ -525,6 +526,25 @@
     <button class="back-btn" onclick="showTab('recipes')">← Recipes</button>
     <div id="recipe-detail-content"></div>
   </div>
+
+  <!-- COMPARE -->
+  <div id="sec-compare" class="section body-pad">
+    <div style="padding:12px 0 4px">
+      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Batch comparison</div>
+      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);margin-bottom:14px;opacity:0.4"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Brew A</label>
+        <select id="cmp-a" onchange="renderComparison()" style="font-size:14px"><option value="">— pick a brew —</option></select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Brew B</label>
+        <select id="cmp-b" onchange="renderComparison()" style="font-size:14px"><option value="">— pick a brew —</option></select>
+      </div>
+    </div>
+    <div id="compare-content"></div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -556,6 +576,9 @@ function load(){
     if(!b.nutrientLog)b.nutrientLog=[];
     if(!b.nutrientSchedule)b.nutrientSchedule=[];
     if(!b.ingredientLog)b.ingredientLog=[];
+    if(!b.costLog)b.costLog=[];
+    if(b.bottleCount===undefined)b.bottleCount='';
+    if(b.bottleSize===undefined)b.bottleSize='';
     if(!b.tastingLog){b.tastingLog=[];if(b.notes){b.tastingLog.push({date:b.startDate||today(),note:b.notes});b.notes='';}}
   });
   renderBatches();updateHero();
@@ -578,12 +601,13 @@ function setFilter(f){
 }
 
 function showTab(t){
-  ['batches','add','stats','detail','recipes','recipe-add','recipe-detail'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
-  const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes'};
+  ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
+  const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
   if(t==='stats')renderStats();
   if(t==='add')document.getElementById('f-date').value=today();
-  if(t==='recipes'){renderRecipes();}
+  if(t==='recipes')renderRecipes();
+  if(t==='compare')initCompare();
 }
 
 function showDetail(id){
@@ -1036,6 +1060,8 @@ function renderDetail(){
     ${nutrientSectionHTML(b)}
     ${ingredientLogHTML(b)}
     ${tastingLogHTML(b)}
+    ${bottleYieldHTML(b)}
+    ${costTrackerHTML(b)}
 
     <button class="delete-btn" onclick="deleteBatch('${b.id}')">Delete brew</button>
   `;
@@ -1206,11 +1232,182 @@ function renderStats(){
 }
 
 /* ---- CSV EXPORT ---- */
+/* ---- BOTTLE YIELD ---- */
+function bottleYieldHTML(b){
+  const count=b.bottleCount||'';
+  const size=b.bottleSize||'';
+  const totalL=count&&size?(parseFloat(count)*(parseFloat(size)/1000)).toFixed(2):null;
+  const costTotal=(b.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
+  const cpp=count&&costTotal?(costTotal/parseFloat(count)).toFixed(2):null;
+  return `<div class="section-head">Bottle yield</div>
+  <div class="form-wrap" style="margin-bottom:0">
+    <div class="row2" style="margin-bottom:10px">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Number of bottles</label>
+        <input id="by-count" type="number" min="0" placeholder="e.g. 12" value="${count}" onchange="saveBottleYield()" /></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Bottle size (ml)</label>
+        <input id="by-size" type="number" min="0" placeholder="e.g. 500" value="${size}" onchange="saveBottleYield()" /></div>
+    </div>
+    ${count||size?`<div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${count?`<span style="font-size:13px;color:var(--text-muted)">Bottles: <b style="color:var(--text)">${count}</b></span>`:''}
+      ${totalL?`<span style="font-size:13px;color:var(--text-muted)">Total: <b style="color:var(--text)">${totalL}L</b></span>`:''}
+      ${cpp?`<span style="font-size:13px;color:#085041">Cost/bottle: <b>$${cpp}</b></span>`:''}
+    </div>`:''}
+  </div>`;
+}
+
+function saveBottleYield(){
+  currentBatch.bottleCount=document.getElementById('by-count')?.value||'';
+  currentBatch.bottleSize=document.getElementById('by-size')?.value||'';
+  syncBatch();
+}
+
+/* ---- COST TRACKER ---- */
+function costTrackerHTML(b){
+  const log=(b.costLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
+  const total=log.reduce((s,e)=>s+parseFloat(e.cost||0),0);
+  const count=parseFloat(b.bottleCount||0);
+  const cpp=count&&total?(total/count).toFixed(2):null;
+  const cpl=parseFloat(b.qty)>0?(total/parseFloat(b.qty)).toFixed(2):null;
+  const rows=log.length
+    ? log.map((e,i)=>`<div class="log-row">
+        <div><div class="log-main">${e.item}</div><div class="log-sub">${e.date}</div></div>
+        <div class="log-right"><span style="font-weight:600;color:#412402">$${parseFloat(e.cost).toFixed(2)}</span>
+          <button class="log-del" onclick="deleteCost(${i})">×</button></div>
+      </div>`).join('')
+    : `<div class="log-empty">No costs logged yet.</div>`;
+  return `<div class="section-head">Cost tracker</div>
+  <div class="log-add" style="flex-wrap:wrap">
+    <input class="date-inp" id="cost-date" type="date" value="${today()}" />
+    <input id="cost-item" placeholder="Item (e.g. apple juice)" style="flex:2;min-width:120px"/>
+    <input id="cost-val" type="number" step="0.01" min="0" placeholder="$0.00" style="width:80px;flex:none"/>
+    <button class="wide" onclick="addCost()">+ Add cost</button>
+  </div>
+  <div class="log-list">${rows}</div>
+  ${total>0?`<div style="background:#FAEEDA;border-radius:var(--border-radius-md);padding:10px 14px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:1.25rem">
+    <span style="font-size:13px;color:#854F0B">Total: <b style="font-size:16px;color:#412402">$${total.toFixed(2)}</b></span>
+    ${cpp?`<span style="font-size:13px;color:#854F0B">Per bottle: <b style="color:#412402">$${cpp}</b></span>`:''}
+    ${cpl?`<span style="font-size:13px;color:#854F0B">Per litre: <b style="color:#412402">$${cpl}</b></span>`:''}
+  </div>`:''}`;
+}
+
+function addCost(){
+  const date=document.getElementById('cost-date')?.value||today();
+  const item=document.getElementById('cost-item')?.value.trim();
+  const cost=document.getElementById('cost-val')?.value.trim();
+  if(!item||!cost)return;
+  currentBatch.costLog=currentBatch.costLog||[];
+  currentBatch.costLog.push({date,item,cost});
+  currentBatch.costLog.sort((a,b)=>a.date.localeCompare(b.date));
+  syncBatch();renderDetail();
+}
+
+function deleteCost(idx){
+  currentBatch.costLog.splice(idx,1);
+  syncBatch();renderDetail();
+}
+
+/* ---- BATCH COMPARISON ---- */
+function initCompare(){
+  const selA=document.getElementById('cmp-a');
+  const selB=document.getElementById('cmp-b');
+  if(!selA||!selB)return;
+  [selA,selB].forEach(sel=>{
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— pick a brew —</option>';
+    batches.forEach(b=>{
+      const o=document.createElement('option');
+      o.value=b.id;o.textContent=b.name+(b.startDate?' ('+b.startDate+')':'');
+      if(b.id===cur)o.selected=true;
+      sel.appendChild(o);
+    });
+  });
+  renderComparison();
+}
+
+function renderComparison(){
+  const idA=document.getElementById('cmp-a')?.value;
+  const idB=document.getElementById('cmp-b')?.value;
+  const el=document.getElementById('compare-content');
+  if(!el)return;
+  if(!idA||!idB){el.innerHTML='<div class="empty"><div class="empty-title">Select two brews above to compare.</div></div>';return;}
+  if(idA===idB){el.innerHTML='<div class="empty"><div class="empty-title">Pick two different brews.</div></div>';return;}
+  const a=batches.find(b=>b.id===idA);
+  const b=batches.find(b=>b.id===idB);
+  if(!a||!b){el.innerHTML='';return;}
+
+  const abvA=calcABV(a),abvB=calcABV(b);
+  const rdgsA=(a.sgReadings||[]).slice().sort((x,y)=>x.date.localeCompare(y.date));
+  const rdgsB=(b.sgReadings||[]).slice().sort((x,y)=>x.date.localeCompare(y.date));
+  const costA=(a.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
+  const costB=(b.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
+  const cppA=a.bottleCount&&costA?(costA/parseFloat(a.bottleCount)).toFixed(2):null;
+  const cppB=b.bottleCount&&costB?(costB/parseFloat(b.bottleCount)).toFixed(2):null;
+
+  function row(label,vA,vB){
+    const highlight=vA&&vB&&vA!==vB;
+    return `<tr>
+      <td style="font-size:12px;color:var(--text-muted);padding:8px 0;border-bottom:0.5px solid var(--border);white-space:nowrap">${label}</td>
+      <td style="font-size:13px;font-weight:600;padding:8px 8px;border-bottom:0.5px solid var(--border);text-align:center">${vA||'—'}</td>
+      <td style="font-size:13px;font-weight:600;padding:8px 0;border-bottom:0.5px solid var(--border);text-align:center">${vB||'—'}</td>
+    </tr>`;
+  }
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:auto 1fr 1fr;margin-bottom:1rem">
+      <div></div>
+      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#FAEEDA;border-radius:8px 0 0 0;color:#412402">${a.name}</div>
+      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#E1F5EE;border-radius:0 8px 0 0;color:#085041">${b.name}</div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--border-radius-lg);border:0.5px solid var(--border);padding:0 12px;margin-bottom:1.25rem;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        ${row('Start date',a.startDate,b.startDate)}
+        ${row('Quantity',a.qty,b.qty)}
+        ${row('Yeast',a.yeast,b.yeast)}
+        ${row('Sugar',a.sugarType?(a.sugarType+(a.sugarQty?' '+a.sugarQty:'')):null,b.sugarType?(b.sugarType+(b.sugarQty?' '+b.sugarQty:'')):null)}
+        ${row('Juice / base',a.juice,b.juice)}
+        ${row('Starting SG',a.startingSG,b.startingSG)}
+        ${row('Latest SG',rdgsA.length?rdgsA[rdgsA.length-1].val:null,rdgsB.length?rdgsB[rdgsB.length-1].val:null)}
+        ${row('Est. ABV',abvA?'~'+abvA+'%':null,abvB?'~'+abvB+'%':null)}
+        ${row('Bottles',a.bottleCount,b.bottleCount)}
+        ${row('Total cost',costA?'$'+costA.toFixed(2):null,costB?'$'+costB.toFixed(2):null)}
+        ${row('Cost / bottle',cppA?'$'+cppA:null,cppB?'$'+cppB:null)}
+        ${row('Status',STATUS[a.status]?.short,STATUS[b.status]?.short)}
+      </table>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>SG over time</div>
+    <div class="chart-wrap" style="height:220px"><canvas id="cmp-chart"></canvas></div>
+  `;
+
+  setTimeout(()=>{
+    const ctx=document.getElementById('cmp-chart');
+    if(!ctx)return;
+    if(window._cmpChart){window._cmpChart.destroy();window._cmpChart=null;}
+    if(!rdgsA.length&&!rdgsB.length)return;
+    window._cmpChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        datasets:[
+          {label:a.name,data:rdgsA.map(r=>({x:r.date,y:parseFloat(r.val)})),borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',pointBackgroundColor:'#C4711A',tension:0.3,fill:true,pointRadius:4},
+          {label:b.name,data:rdgsB.map(r=>({x:r.date,y:parseFloat(r.val)})),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',pointBackgroundColor:'#085041',tension:0.3,fill:true,pointRadius:4}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{type:'category',ticks:{font:{size:10}},grid:{display:false}},
+          y:{ticks:{font:{size:10}},grid:{color:'rgba(196,113,26,0.1)'}}
+        }
+      }
+    });
+  },50);
+}
+
 function exportJSON(){
   const payload={
     exportedAt:new Date().toISOString(),
-    version:2,
-    batches,
+    version:3,
+    batches:batches.map(b=>({...b,bottleCount:b.bottleCount||'',bottleSize:b.bottleSize||'',costLog:b.costLog||[]})),
     recipes
   };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});

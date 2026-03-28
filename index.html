@@ -70,6 +70,14 @@
 
     /* BREW CARDS */
     .batch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #EF9F27; }
+    .brew-card-grad { background: linear-gradient(135deg, var(--surface) 80%, rgba(29,158,117,0.05) 100%); }
+    .brew-card-grad.status-secondary { background: linear-gradient(135deg, var(--surface) 80%, rgba(239,159,39,0.06) 100%); }
+    .brew-card-grad.status-bottled { background: linear-gradient(135deg, var(--surface) 80%, rgba(180,178,169,0.06) 100%); }
+    .recipe-card-style { background: linear-gradient(135deg, var(--surface) 85%, rgba(127,119,221,0.07) 100%); }
+    [data-theme="dark"] .brew-card-grad,
+    [data-theme="dark"] .brew-card-grad.status-secondary,
+    [data-theme="dark"] .brew-card-grad.status-bottled { background: var(--surface); }
+    [data-theme="dark"] .recipe-card-style { background: var(--surface); }
     .batch-card.status-secondary { border-left-color: #BA7517; }
     .batch-card.status-bottled { border-left-color: #B4B2A9; }
     .batch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; gap: 8px; }
@@ -747,8 +755,8 @@ function renderBatches(){
     const oc=overdueCount(b);
     const hasRealOverdue=(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today());
     const overdueHTML=oc>0?`<span class="${hasRealOverdue?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';
-    const cardAccent=b.status==='bottled'?'rgba(180,178,169,0.06)':b.status==='secondary'?'rgba(239,159,39,0.04)':'rgba(29,158,117,0.04)';
-    return `<div class="batch-card ${st.cardCls}" style="background:linear-gradient(135deg,#fff 80%,${cardAccent} 100%)" onclick="showDetail('${b.id}')">
+    const cardAccent=b.status==='bottled'?'rgba(180,178,169,0.06)':b.status==='secondary'?'rgba(239,159,39,0.06)':'rgba(29,158,117,0.06)';
+    return `<div class="batch-card ${st.cardCls} brew-card-grad" data-accent="${cardAccent}" onclick="showDetail('${b.id}')">
       <div class="batch-row">
         <span class="batch-name">${b.name}</span>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
@@ -1693,7 +1701,7 @@ function renderRecipes(){
   }
   const scrollIcon=`<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="margin-right:4px;vertical-align:-1px"><rect x="1.5" y="1.5" width="10" height="10" rx="1.5" stroke="#3C3489" stroke-width="1.2"/><line x1="3.5" y1="4.5" x2="9.5" y2="4.5" stroke="#3C3489" stroke-width="1" stroke-linecap="round"/><line x1="3.5" y1="6.5" x2="9.5" y2="6.5" stroke="#3C3489" stroke-width="1" stroke-linecap="round"/><line x1="3.5" y1="8.5" x2="7" y2="8.5" stroke="#3C3489" stroke-width="1" stroke-linecap="round"/></svg>`;
   el.innerHTML=recipes.map(r=>`
-    <div class="batch-card" style="border-left-color:#7F77DD;background:linear-gradient(135deg,#fff 85%,#EEEDFE 100%)" onclick="showRecipeDetail('${r.id}')">
+    <div class="batch-card recipe-card-style" style="border-left-color:#7F77DD" onclick="showRecipeDetail('${r.id}')">
       <div class="batch-row">
         <span class="batch-name">${r.name}</span>
         <span class="status-pill" style="background:#EEEDFE;color:#3C3489">${scrollIcon}Recipe</span>

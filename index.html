@@ -327,6 +327,7 @@ function load(){
     if(!b.nutrientLog)b.nutrientLog=[];
     if(!b.nutrientSchedule)b.nutrientSchedule=[];
     if(!b.ingredientLog)b.ingredientLog=[];
+    if(!b.tastingLog){b.tastingLog=[];if(b.notes){b.tastingLog.push({date:b.startDate||today(),note:b.notes});b.notes='';}}
   });
   renderBatches();updateHero();
 }
@@ -737,9 +738,6 @@ function renderDetail(){
       ${ingredientsDisplayHTML(b)}
     </div>
 
-    ${nutrientSectionHTML(b)}
-    ${ingredientLogHTML(b)}
-
     <div class="section-head">SG readings</div>
     <div class="log-add">
       <input class="date-inp" id="new-sg-date" type="date" value="${today()}" />
@@ -748,18 +746,18 @@ function renderDetail(){
     </div>
     <div class="chart-wrap"><canvas id="sg-chart"></canvas></div>
     <div class="log-list" style="margin-bottom:1.25rem">
-      ${readings.length?readings.slice().reverse().map((r,i,arr)=>{
-        const prev=arr[i+1];let trend='';
+      ${readings.length?readings.map((r,i,arr)=>{
+        const prev=arr[i-1];let trend='';
         if(prev){const diff=parseFloat(r.val)-parseFloat(prev.val);trend=diff<-0.001?'<span class="sg-trend down">fermenting</span>':'<span class="sg-trend same">stable</span>';}
         return `<div class="log-row"><div class="log-sub" style="font-size:14px">${r.date}</div><div style="font-weight:600">${r.val}${trend}</div></div>`;
       }).join(''):`<div class="log-empty">No readings yet.</div>`}
     </div>
 
     ${stageHistoryHTML(b)}
+    ${nutrientSectionHTML(b)}
+    ${ingredientLogHTML(b)}
+    ${tastingLogHTML(b)}
 
-    <div class="section-head">Tasting notes</div>
-    <textarea id="tasting-area" placeholder="Aroma, flavour, review...">${b.notes||''}</textarea>
-    <button class="btn-primary" style="margin-top:10px" onclick="saveNotes()">Save notes</button>
     <button class="delete-btn" onclick="deleteBatch('${b.id}')">Delete brew</button>
   `;
   setTimeout(()=>renderSGChart(readings),50);
@@ -818,12 +816,35 @@ function addSGReading(){
   currentBatch.sgReadings.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();
 }
-function saveNotes(){
-  currentBatch.notes=document.getElementById('tasting-area').value;
-  syncBatch();
-  const btn=event.target;
-  btn.textContent='Saved!';btn.style.background='#1D9E75';
-  setTimeout(()=>{btn.textContent='Save notes';btn.style.background='#412402';},1400);
+function tastingLogHTML(b){
+  const log=(b.tastingLog||[]);
+  const rows=log.length
+    ? log.map((e,i)=>`<div class="log-row">
+        <div style="flex:1"><div class="log-main" style="font-weight:400;font-size:14px">${e.note}</div><div class="log-sub">${e.date}</div></div>
+        <div class="log-right"><button class="log-del" onclick="deleteTastingNote(${i})">x</button></div>
+      </div>`).join('')
+    : `<div class="log-empty">No notes yet.</div>`;
+  return `<div class="section-head">Tasting notes &amp; observations</div>
+  <div class="log-add" style="flex-wrap:wrap">
+    <input class="date-inp" id="note-date" type="date" value="${today()}" />
+    <textarea id="note-text" placeholder="Aroma, flavour, observations..." style="width:100%;flex:none;min-height:64px;margin-top:4px"></textarea>
+    <button class="wide" onclick="addTastingNote()" style="margin-top:4px">+ Add note</button>
+  </div>
+  <div class="log-list">${rows}</div>`;
+}
+
+function addTastingNote(){
+  const date=document.getElementById('note-date').value||today();
+  const note=document.getElementById('note-text').value.trim();
+  if(!note)return;
+  currentBatch.tastingLog=currentBatch.tastingLog||[];
+  currentBatch.tastingLog.push({date,note});
+  syncBatch();renderDetail();
+}
+
+function deleteTastingNote(idx){
+  currentBatch.tastingLog.splice(idx,1);
+  syncBatch();renderDetail();
 }
 function deleteBatch(id){
   if(!confirm('Delete this brew?'))return;

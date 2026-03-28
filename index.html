@@ -1383,19 +1383,46 @@ function renderComparison(){
     if(!ctx)return;
     if(window._cmpChart){window._cmpChart.destroy();window._cmpChart=null;}
     if(!rdgsA.length&&!rdgsB.length)return;
+
+    function toDayOffsets(rdgs){
+      if(!rdgs.length)return[];
+      const origin=new Date(rdgs[0].date+'T12:00:00');
+      return rdgs.map(r=>{
+        const d=new Date(r.date+'T12:00:00');
+        const day=Math.round((d-origin)/86400000);
+        return{x:day,y:parseFloat(r.val)};
+      });
+    }
+
+    const ptsA=toDayOffsets(rdgsA);
+    const ptsB=toDayOffsets(rdgsB);
+    const allDays=[...ptsA.map(p=>p.x),...ptsB.map(p=>p.x)];
+    const maxDay=allDays.length?Math.max(...allDays):0;
+
     window._cmpChart=new Chart(ctx,{
       type:'line',
       data:{
         datasets:[
-          {label:a.name,data:rdgsA.map(r=>({x:r.date,y:parseFloat(r.val)})),borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',pointBackgroundColor:'#C4711A',tension:0.3,fill:true,pointRadius:4},
-          {label:b.name,data:rdgsB.map(r=>({x:r.date,y:parseFloat(r.val)})),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',pointBackgroundColor:'#085041',tension:0.3,fill:true,pointRadius:4}
+          ...(ptsA.length?[{label:a.name,data:ptsA,borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',pointBackgroundColor:'#C4711A',tension:0.3,fill:true,pointRadius:4}]:[]),
+          ...(ptsB.length?[{label:b.name,data:ptsB,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',pointBackgroundColor:'#085041',tension:0.3,fill:true,pointRadius:4}]:[])
         ]
       },
       options:{
         responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:12}}},
         scales:{
-          x:{type:'category',ticks:{font:{size:10}},grid:{display:false}},
+          x:{
+            type:'linear',
+            min:0,
+            max:maxDay||1,
+            ticks:{
+              font:{size:10},
+              stepSize:1,
+              callback:v=>v===0?'Day 0':v+'d'
+            },
+            title:{display:true,text:'Days since first reading',font:{size:10},color:'#888'},
+            grid:{display:false}
+          },
           y:{ticks:{font:{size:10}},grid:{color:'rgba(196,113,26,0.1)'}}
         }
       }

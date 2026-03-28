@@ -328,33 +328,41 @@
         <polygon points="190,8 200,14 200,26 190,32 180,26 180,14" fill="#EF9F27" opacity="0.15"/>
       </g>
 
-      <!-- carboy silhouette -->
-      <g transform="translate(155, 12)" opacity="0.55">
-        <!-- neck -->
-        <rect x="11" y="0" width="8" height="6" rx="2" fill="#FAC775"/>
-        <!-- shoulder -->
-        <path d="M8 6 C4 8 2 13 2 18 L2 58 C2 62 5 65 10 65 L20 65 C25 65 28 62 28 58 L28 18 C28 13 26 8 22 6 Z" fill="#FAC775"/>
-        <!-- liquid level line -->
-        <path d="M3 30 Q15 27 27 30" stroke="#633806" stroke-width="1" fill="none" opacity="0.4"/>
-        <!-- bubbles inside carboy -->
-        <circle cx="10" cy="50" r="1.5" fill="#633806" opacity="0">
-          <animate attributeName="cy" values="55;28;55" dur="3s" repeatCount="indefinite"/>
+      <!-- carboy silhouette: wider, shorter, tucked right -->
+      <g transform="translate(140, 8)" opacity="0.6">
+        <!-- neck - wider -->
+        <rect x="15" y="0" width="10" height="7" rx="2.5" fill="#FAC775"/>
+        <!-- body: wide shoulders, squat body -->
+        <path d="M10 7 C4 10 2 16 2 22 L2 56 C2 60 6 63 12 63 L28 63 C34 63 38 60 38 56 L38 22 C38 16 36 10 30 7 Z" fill="#FAC775"/>
+        <!-- subtle inner sheen -->
+        <path d="M8 22 C8 18 10 14 14 12 L14 55 C10 55 8 52 8 48 Z" fill="white" opacity="0.06"/>
+        <!-- liquid level -->
+        <path d="M3 28 Q20 24 37 28" stroke="#412402" stroke-width="1.2" fill="none" opacity="0.35"/>
+        <!-- bubbles -->
+        <circle cx="13" cy="52" r="2" fill="#412402" opacity="0">
+          <animate attributeName="cy" values="56;26;56" dur="3s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values="0.5;0;0.5" dur="3s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="18" cy="52" r="1" fill="#633806" opacity="0">
-          <animate attributeName="cy" values="58;25;58" dur="4s" begin="1s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0.4;0;0.4" dur="4s" begin="1s" repeatCount="indefinite"/>
+        <circle cx="24" cy="54" r="1.4" fill="#412402" opacity="0">
+          <animate attributeName="cy" values="58;24;58" dur="4.2s" begin="1.1s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="4.2s" begin="1.1s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="14" cy="48" r="1.2" fill="#633806" opacity="0">
-          <animate attributeName="cy" values="55;22;55" dur="3.5s" begin="0.5s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0.45;0;0.45" dur="3.5s" begin="0.5s" repeatCount="indefinite"/>
+        <circle cx="19" cy="50" r="1.6" fill="#412402" opacity="0">
+          <animate attributeName="cy" values="55;20;55" dur="3.6s" begin="0.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.45;0;0.45" dur="3.6s" begin="0.5s" repeatCount="indefinite"/>
         </circle>
-        <!-- airlock on top -->
-        <rect x="13" y="-8" width="4" height="8" rx="1" fill="#EF9F27" opacity="0.8"/>
-        <circle cx="15" cy="-10" r="3" fill="none" stroke="#EF9F27" stroke-width="1.2" opacity="0.8"/>
-        <circle cx="15" cy="-10" r="1" fill="#EF9F27" opacity="0.6">
-          <animate attributeName="r" values="1;2;1" dur="2s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+        <circle cx="30" cy="48" r="1.2" fill="#412402" opacity="0">
+          <animate attributeName="cy" values="55;28;55" dur="5s" begin="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.35;0;0.35" dur="5s" begin="2s" repeatCount="indefinite"/>
+        </circle>
+        <!-- airlock tube -->
+        <rect x="18" y="-10" width="4" height="10" rx="1.5" fill="#EF9F27" opacity="0.85"/>
+        <!-- airlock bulb -->
+        <circle cx="20" cy="-13" r="4" fill="none" stroke="#EF9F27" stroke-width="1.4" opacity="0.85"/>
+        <!-- airlock pulse -->
+        <circle cx="20" cy="-13" r="1.5" fill="#EF9F27" opacity="0.7">
+          <animate attributeName="r" values="1.5;3;1.5" dur="2.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.1;0.7" dur="2.2s" repeatCount="indefinite"/>
         </circle>
       </g>
     </svg>
@@ -362,9 +370,11 @@
       <div>
         <div class="hero-kicker">Craft Cider Tracker</div>
         <div class="hero-title">Cider Log</div>
-        <div class="hero-sub" id="hero-sub">0 brews tracked</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          <div class="hero-sub" id="hero-sub">0 brews tracked</div>
+          <div class="hero-badge" id="hero-badge">0 active</div>
+        </div>
       </div>
-      <div class="hero-badge" id="hero-badge">0 active</div>
     </div>
     <div class="hero-divider"></div>
     <div class="apple-strip" id="apple-strip"></div>

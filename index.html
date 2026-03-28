@@ -274,60 +274,89 @@
 <body>
 <div class="app">
   <div class="hero">
-    <svg style="position:absolute;right:0;top:0;bottom:0;pointer-events:none;height:100%;width:180px" viewBox="0 0 180 110" preserveAspectRatio="xMaxYMid meet" xmlns="http://www.w3.org/2000/svg">
-      <!-- concentric rings centred on the apple -->
-      <circle cx="118" cy="58" r="70" stroke="#FAC775" stroke-width="0.8" fill="none" opacity="0.12"/>
-      <circle cx="118" cy="58" r="52" stroke="#FAC775" stroke-width="0.8" fill="none" opacity="0.15"/>
-      <circle cx="118" cy="58" r="34" stroke="#FAC775" stroke-width="0.7" fill="none" opacity="0.18"/>
+    <svg style="position:absolute;right:0;top:0;bottom:0;pointer-events:none;height:100%;width:200px;overflow:visible" viewBox="0 0 200 100" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hfade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#412402" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#412402" stop-opacity="0"/>
+        </linearGradient>
+        <mask id="hmask">
+          <rect width="200" height="100" fill="url(#hfade)"/>
+        </mask>
+      </defs>
 
-      <!-- apple body: tall oval, slight waist, dimple at top -->
-      <path d="
-        M118 24
-        C118 24 122 20 126 21
-        C130 22 132 26 130 29
-        C134 27 140 28 142 33
-        C146 40 143 50 137 55
-        C133 58 130 60 128 65
-        C126 72 126 80 122 85
-        C120 88 116 90 113 89
-        C109 88 107 84 106 80
-        C104 74 104 66 101 60
-        C99 55 95 52 93 47
-        C90 40 92 31 97 27
-        C101 23 107 23 110 26
-        C112 22 116 21 118 24Z
-      " fill="#FAC775" opacity="0.9"/>
+      <!-- honeycomb hexagons -->
+      <g mask="url(#hmask)" opacity="0.18">
+        <g fill="none" stroke="#FAC775" stroke-width="0.8">
+          <!-- row 1 -->
+          <polygon points="60,8 70,14 70,26 60,32 50,26 50,14"/>
+          <polygon points="80,8 90,14 90,26 80,32 70,26 70,14"/>
+          <polygon points="100,8 110,14 110,26 100,32 90,26 90,14"/>
+          <polygon points="120,8 130,14 130,26 120,32 110,26 110,14"/>
+          <polygon points="140,8 150,14 150,26 140,32 130,26 130,14"/>
+          <polygon points="160,8 170,14 170,26 160,32 150,26 150,14"/>
+          <polygon points="180,8 190,14 190,26 180,32 170,26 170,14"/>
+          <!-- row 2 (offset) -->
+          <polygon points="70,32 80,38 80,50 70,56 60,50 60,38"/>
+          <polygon points="90,32 100,38 100,50 90,56 80,50 80,38"/>
+          <polygon points="110,32 120,38 120,50 110,56 100,50 100,38"/>
+          <polygon points="130,32 140,38 140,50 130,56 120,50 120,38"/>
+          <polygon points="150,32 160,38 160,50 150,56 140,50 140,38"/>
+          <polygon points="170,32 180,38 180,50 170,56 160,50 160,38"/>
+          <polygon points="190,32 200,38 200,50 190,56 180,50 180,38"/>
+          <!-- row 3 -->
+          <polygon points="60,56 70,62 70,74 60,80 50,74 50,62"/>
+          <polygon points="80,56 90,62 90,74 80,80 70,74 70,62"/>
+          <polygon points="100,56 110,62 110,74 100,80 90,74 90,62"/>
+          <polygon points="120,56 130,62 130,74 120,80 110,74 110,62"/>
+          <polygon points="140,56 150,62 150,74 140,80 130,74 130,62"/>
+          <polygon points="160,56 170,62 170,74 160,80 150,74 150,62"/>
+          <polygon points="180,56 190,62 190,74 180,80 170,74 170,62"/>
+          <!-- row 4 -->
+          <polygon points="70,80 80,86 80,98 70,104 60,98 60,86"/>
+          <polygon points="90,80 100,86 100,98 90,104 80,98 80,86"/>
+          <polygon points="110,80 120,86 120,98 110,104 100,98 100,86"/>
+          <polygon points="130,80 140,86 140,98 130,104 120,98 120,86"/>
+          <polygon points="150,80 160,86 160,98 150,104 140,98 140,86"/>
+          <polygon points="170,80 180,86 180,98 170,104 160,98 160,86"/>
+          <polygon points="190,80 200,86 200,98 190,104 180,98 180,86"/>
+        </g>
+        <!-- a few filled honeycombs for depth -->
+        <polygon points="140,8 150,14 150,26 140,32 130,26 130,14" fill="#EF9F27" opacity="0.3"/>
+        <polygon points="170,32 180,38 180,50 170,56 160,50 160,38" fill="#EF9F27" opacity="0.25"/>
+        <polygon points="150,56 160,62 160,74 150,80 140,74 140,62" fill="#FAC775" opacity="0.2"/>
+        <polygon points="190,8 200,14 200,26 190,32 180,26 180,14" fill="#EF9F27" opacity="0.15"/>
+      </g>
 
-      <!-- highlight shine -->
-      <ellipse cx="108" cy="36" rx="5" ry="8" fill="white" opacity="0.12" transform="rotate(-15 108 36)"/>
-
-      <!-- stem: thin, slightly curved -->
-      <path d="M118 24 C119 17 122 12 120 8" stroke="#EF9F27" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.9"/>
-
-      <!-- leaf -->
-      <path d="M120 14 C126 10 132 12 130 18 C126 16 122 16 120 14Z" fill="#EF9F27" opacity="0.7"/>
-
-      <!-- bubbles rising on right side -->
-      <circle cx="155" cy="95" r="3.5" fill="#FAC775" opacity="0">
-        <animate attributeName="cy" values="95;5;95" dur="4s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.5;0;0.5" dur="4s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="168" cy="100" r="2.5" fill="#FAC775" opacity="0">
-        <animate attributeName="cy" values="100;10;100" dur="5.5s" begin="1.2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.4;0;0.4" dur="5.5s" begin="1.2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="143" cy="90" r="2" fill="#EF9F27" opacity="0">
-        <animate attributeName="cy" values="90;8;90" dur="3.8s" begin="0.6s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.45;0;0.45" dur="3.8s" begin="0.6s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="160" cy="85" r="1.5" fill="#FAC775" opacity="0">
-        <animate attributeName="cy" values="85;15;85" dur="4.8s" begin="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.35;0;0.35" dur="4.8s" begin="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="175" cy="92" r="2" fill="#EF9F27" opacity="0">
-        <animate attributeName="cy" values="92;5;92" dur="6s" begin="0.3s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.3;0;0.3" dur="6s" begin="0.3s" repeatCount="indefinite"/>
-      </circle>
+      <!-- carboy silhouette -->
+      <g transform="translate(155, 12)" opacity="0.55">
+        <!-- neck -->
+        <rect x="11" y="0" width="8" height="6" rx="2" fill="#FAC775"/>
+        <!-- shoulder -->
+        <path d="M8 6 C4 8 2 13 2 18 L2 58 C2 62 5 65 10 65 L20 65 C25 65 28 62 28 58 L28 18 C28 13 26 8 22 6 Z" fill="#FAC775"/>
+        <!-- liquid level line -->
+        <path d="M3 30 Q15 27 27 30" stroke="#633806" stroke-width="1" fill="none" opacity="0.4"/>
+        <!-- bubbles inside carboy -->
+        <circle cx="10" cy="50" r="1.5" fill="#633806" opacity="0">
+          <animate attributeName="cy" values="55;28;55" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.5;0;0.5" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="18" cy="52" r="1" fill="#633806" opacity="0">
+          <animate attributeName="cy" values="58;25;58" dur="4s" begin="1s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="4s" begin="1s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="14" cy="48" r="1.2" fill="#633806" opacity="0">
+          <animate attributeName="cy" values="55;22;55" dur="3.5s" begin="0.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.45;0;0.45" dur="3.5s" begin="0.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- airlock on top -->
+        <rect x="13" y="-8" width="4" height="8" rx="1" fill="#EF9F27" opacity="0.8"/>
+        <circle cx="15" cy="-10" r="3" fill="none" stroke="#EF9F27" stroke-width="1.2" opacity="0.8"/>
+        <circle cx="15" cy="-10" r="1" fill="#EF9F27" opacity="0.6">
+          <animate attributeName="r" values="1;2;1" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
     </svg>
     <div class="hero-top">
       <div>

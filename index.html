@@ -1001,10 +1001,19 @@ function renderDetail(){
       <div class="status-switcher">
         ${Object.entries(STATUS).map(([k,v])=>`<button class="status-opt${curStatus===k?' active '+v.optCls:''}" onclick="setStatus('${k}')">${v.label}</button>`).join('')}
       </div>
-      <div class="info-grid">
-        <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
-        <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
-      </div>
+      ${(()=>{
+        const rdgs=(b.sgReadings||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
+        const latestSG=rdgs.length?rdgs[rdgs.length-1].val:null;
+        const og=parseFloat(b.startingSG);
+        const fg=latestSG?parseFloat(latestSG):NaN;
+        const drop=(!isNaN(og)&&!isNaN(fg)&&og!==fg)?((og-fg)*1000).toFixed(0):null;
+        const sameAsOG=latestSG&&b.startingSG&&parseFloat(latestSG)===og;
+        return `<div class="info-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
+          <div class="info-card"><div class="info-label">Current SG</div><div class="info-val">${latestSG||'—'}${drop&&!sameAsOG?`<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:2px">▼ ${drop} pts</div>`:''}</div></div>
+          <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
+        </div>`;
+      })()}
       ${ingredientsDisplayHTML(b)}
     </div>
 

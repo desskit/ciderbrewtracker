@@ -15,13 +15,14 @@
     :root {
       --cider: #C4711A; --cider-light: #FAEEDA; --cider-mid: #EF9F27;
       --cider-dark: #633806; --cider-deep: #412402;
-      --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #085041;
+      --green: #1D9E75;
       --text: #1a1a1a; --text-muted: #666; --border: rgba(0,0,0,0.12);
       --surface: #fff; --bg: #f5f0eb;
     }
     html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
     .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
 
+    /* HERO */
     .hero { background: #412402; padding: env(safe-area-inset-top, 12px) 1.25rem 1rem; }
     .hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
     .hero-title { font-size: 22px; font-weight: 600; color: #FAC775; letter-spacing: -0.3px; }
@@ -31,18 +32,21 @@
     .apple { width: 10px; height: 10px; border-radius: 50%; background: #EF9F27; opacity: 0.25; }
     .apple.filled { opacity: 1; }
 
+    /* TABS */
     .tab-bar { display: flex; background: #2C1800; border-bottom: 1px solid #412402; position: sticky; top: 0; z-index: 10; }
-    .tab { flex: 1; text-align: center; padding: 13px 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: #BA7517; border-bottom: 2px solid transparent; font-family: inherit; position: relative; }
+    .tab { flex: 1; text-align: center; padding: 13px 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: #BA7517; border-bottom: 2px solid transparent; font-family: inherit; }
     .tab.active { color: #FAC775; border-bottom-color: #EF9F27; }
 
     .body-pad { padding: 1rem; flex: 1; }
     .section { display: none; }
     .section.visible { display: block; }
 
+    /* FILTER */
     .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; }
     .filter-btn { flex: 1; padding: 9px 0; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: inherit; }
     .filter-btn.active { background: #FAEEDA; color: #633806; border-color: #EF9F27; }
 
+    /* BREW CARDS */
     .batch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #EF9F27; }
     .batch-card.status-secondary { border-left-color: #BA7517; }
     .batch-card.status-bottled { border-left-color: #B4B2A9; }
@@ -57,22 +61,14 @@
     .meta { font-size: 12px; color: var(--text-muted); }
     .meta b { color: var(--text); font-weight: 600; }
     .abv-pill { background: #E1F5EE; color: #085041; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
-
-    /* OVERDUE BADGE on card */
     .overdue-badge { background: #FCEBEB; color: #A32D2D; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid #F09595; }
     .due-today-badge { background: #FAEEDA; color: #633806; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid #EF9F27; }
 
-    /* OVERDUE BANNER in detail */
-    .overdue-banner { background: #FCEBEB; border: 1px solid #F09595; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; }
-    .overdue-banner-title { font-size: 13px; font-weight: 700; color: #A32D2D; margin-bottom: 4px; }
-    .overdue-banner-item { font-size: 13px; color: #791F1F; padding: 2px 0; }
-    .due-today-banner { background: #FAEEDA; border: 1px solid #FAC775; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; }
-    .due-today-banner-title { font-size: 13px; font-weight: 700; color: #633806; margin-bottom: 4px; }
-    .due-today-banner-item { font-size: 13px; color: #412402; padding: 2px 0; }
-
+    /* FORMS */
     .form-wrap { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
     .form-section-label { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #FAEEDA; }
     .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .form-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; margin-top: -4px; font-style: italic; }
     .form-group { margin-bottom: 12px; }
     .form-group:last-child { margin-bottom: 0; }
     input, select, textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; background: var(--surface); color: var(--text); font-family: inherit; -webkit-appearance: none; }
@@ -83,10 +79,15 @@
     .btn-primary:active { background: #633806; }
     .btn-secondary { background: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; padding: 12px 0; width: 100%; font-size: 15px; cursor: pointer; margin-top: 8px; font-family: inherit; }
 
-    .back-btn { background: none; border: none; font-size: 14px; color: #BA7517; cursor: pointer; padding: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 4px; font-family: inherit; font-weight: 600; }
+    /* DETAIL HEADER */
+    .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: 12px; }
+    .detail-header-left {}
     .detail-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-    .detail-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1rem; }
+    .detail-sub { font-size: 13px; color: var(--text-muted); }
+    .edit-details-btn { background: #FAEEDA; color: #633806; border: 1px solid #EF9F27; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+    .edit-details-btn:active { background: #EF9F27; }
 
+    /* STAGE TIMER */
     .stage-timer { border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
     .stage-timer.s-primary { background: #E1F5EE; border: 1px solid #9FE1CB; }
     .stage-timer.s-secondary { background: #FAEEDA; border: 1px solid #FAC775; }
@@ -96,17 +97,17 @@
     .stage-timer-name { font-size: 14px; font-weight: 600; }
     .stage-timer.s-primary .stage-timer-name { color: #04342C; }
     .stage-timer.s-secondary .stage-timer-name { color: #412402; }
-    .stage-timer-since { font-size: 12px; margin-top: 2px; }
+    .stage-date-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .stage-timer-since { font-size: 12px; }
     .stage-timer.s-primary .stage-timer-since { color: #0F6E56; }
     .stage-timer.s-secondary .stage-timer-since { color: #854F0B; }
-    .stage-date-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
     .stage-date-edit-btn { background: none; border: none; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 1px 6px; border-radius: 4px; }
     .stage-timer.s-primary .stage-date-edit-btn { color: #0F6E56; background: rgba(15,110,86,0.1); }
     .stage-timer.s-secondary .stage-date-edit-btn { color: #854F0B; background: rgba(133,79,11,0.1); }
     .stage-date-input-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
     .stage-date-input-row input[type=date] { padding: 5px 8px; font-size: 13px; border-radius: 6px; flex: 1; min-width: 130px; }
     .stage-date-save-btn { background: #412402; color: #FAC775; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
-    .stage-days { text-align: right; }
+    .stage-days { text-align: right; flex-shrink: 0; }
     .stage-days-num { font-size: 40px; font-weight: 700; line-height: 1; }
     .stage-timer.s-primary .stage-days-num { color: #085041; }
     .stage-timer.s-secondary .stage-days-num { color: #633806; }
@@ -114,31 +115,37 @@
     .stage-timer.s-primary .stage-days-unit { color: #0F6E56; }
     .stage-timer.s-secondary .stage-days-unit { color: #854F0B; }
 
+    /* STATUS SWITCHER */
     .status-switcher { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 1.25rem; }
     .status-opt { padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: inherit; line-height: 1.3; }
     .status-opt.active.s-primary { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
     .status-opt.active.s-secondary { background: #FAEEDA; color: #633806; border-color: #EF9F27; }
     .status-opt.active.s-bottled { background: #f0ede8; color: #444441; border-color: #B4B2A9; }
 
+    /* INFO GRID */
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
     .info-card { background: #FAEEDA; border-radius: 8px; padding: 10px 12px; }
     .info-label { font-size: 11px; color: #854F0B; margin-bottom: 2px; font-weight: 600; }
-    .info-val { font-size: 14px; font-weight: 600; color: #412402; }
+    .info-val { font-size: 14px; font-weight: 600; color: #412402; word-break: break-word; }
 
+    /* INGREDIENT DISPLAY CARDS */
+    .ing-section { border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.25rem; background: var(--surface); }
+    .ing-section-head { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; padding: 10px 14px 8px; border-bottom: 1px solid var(--border); background: #FAEEDA; }
+    .ing-row { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 14px; border-bottom: 1px solid var(--border); gap: 12px; }
+    .ing-row:last-child { border-bottom: none; }
+    .ing-name { font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
+    .ing-val { font-size: 14px; font-weight: 600; color: var(--text); text-align: right; }
+
+    /* SECTION HEADS */
     .section-head { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin: 1.25rem 0 10px; }
 
-    .additive-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
-    .additive-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
-    .additive-name { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
-    .additive-val { font-size: 14px; font-weight: 600; color: var(--text); }
-
+    /* LOG ROWS */
     .log-add { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
     .log-add input { flex: 1; min-width: 60px; }
     .log-add input.date-inp { width: 136px; flex: none; }
     .log-add input.unit-inp { width: 72px; flex: none; }
     .log-add button { background: #412402; color: #FAC775; border: none; border-radius: 8px; padding: 0 14px; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit; font-weight: 600; min-height: 44px; }
     .log-add button.wide { width: 100%; flex: none; }
-
     .log-list { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); margin-bottom: 1.25rem; }
     .log-empty { font-size: 14px; color: var(--text-muted); padding: 12px 14px; }
     .log-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
@@ -154,12 +161,10 @@
     .sched-row:last-child { border-bottom: none; }
     .sched-row.overdue { background: #FCEBEB; }
     .sched-row.due-today { background: #FAEEDA; }
-    .sched-row.done { opacity: 0.45; }
     .sched-left { flex: 1; min-width: 0; }
-    .sched-main { font-size: 14px; font-weight: 600; color: var(--text); }
+    .sched-main { font-size: 14px; font-weight: 600; }
     .sched-row.overdue .sched-main { color: #A32D2D; }
     .sched-row.due-today .sched-main { color: #633806; }
-    .sched-row.done .sched-main { text-decoration: line-through; }
     .sched-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
     .sched-row.overdue .sched-date { color: #c0392b; }
     .sched-row.due-today .sched-date { color: #854F0B; }
@@ -170,7 +175,14 @@
     .sched-tag.done { background: #E1F5EE; color: #085041; }
     .sched-actions { display: flex; align-items: center; gap: 6px; }
     .done-btn { background: #412402; color: #FAC775; border: none; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
-    .done-btn.undone { background: none; border: 1px solid var(--border); color: var(--text-muted); }
+
+    /* BANNERS */
+    .overdue-banner { background: #FCEBEB; border: 1px solid #F09595; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; }
+    .overdue-banner-title { font-size: 13px; font-weight: 700; color: #A32D2D; margin-bottom: 4px; }
+    .overdue-banner-item { font-size: 13px; color: #791F1F; padding: 2px 0; }
+    .due-today-banner { background: #FAEEDA; border: 1px solid #FAC775; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; }
+    .due-today-banner-title { font-size: 13px; font-weight: 700; color: #633806; margin-bottom: 4px; }
+    .due-today-banner-item { font-size: 13px; color: #412402; padding: 2px 0; }
 
     .chart-wrap { background: #f5f0eb; border-radius: 8px; padding: 12px; margin-bottom: 1rem; height: 180px; }
     .sg-trend { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600; margin-left: 6px; }
@@ -189,6 +201,8 @@
     .sh-dates { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
     .sh-duration { font-size: 13px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
     .sh-duration.ongoing { color: #1D9E75; }
+
+    .back-btn { background: none; border: none; font-size: 14px; color: #BA7517; cursor: pointer; padding: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 4px; font-family: inherit; font-weight: 600; }
     .delete-btn { background: none; border: 1px solid #f5c6c6; color: #c0392b; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 14px; cursor: pointer; font-family: inherit; margin-top: 1rem; }
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
@@ -218,6 +232,7 @@
     <button class="tab" onclick="showTab('stats')">Stats</button>
   </div>
 
+  <!-- BREWS LIST -->
   <div id="sec-batches" class="section visible body-pad">
     <div class="filter-bar">
       <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
@@ -227,6 +242,7 @@
     <div id="batch-list"></div>
   </div>
 
+  <!-- NEW BREW FORM -->
   <div id="sec-add" class="section body-pad">
     <div class="form-wrap">
       <div class="form-section-label">Brew info</div>
@@ -235,39 +251,49 @@
         <div class="form-group"><label class="form-label">Quantity</label><input id="f-qty" placeholder="1G" /></div>
         <div class="form-group"><label class="form-label">Start date</label><input id="f-date" type="date" /></div>
       </div>
-    </div>
-    <div class="form-wrap">
-      <div class="form-section-label">Base ingredients</div>
       <div class="form-group"><label class="form-label">Apple juice / base</label><input id="f-juice" placeholder="Brand, type, volume..." /></div>
-      <div class="form-group"><label class="form-label">Yeast</label><input id="f-yeast" placeholder="Fleischmann's, EC-1118..." /></div>
-      <div class="row2">
-        <div class="form-group"><label class="form-label">Sugar type</label><input id="f-sugar-type" placeholder="Brown sugar, honey..." /></div>
-        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="f-sugar-qty" placeholder="200g, 1 cup..." /></div>
-      </div>
     </div>
+
     <div class="form-wrap">
-      <div class="form-section-label">Additives at pitch</div>
+      <div class="form-section-label">Pre-fermentation</div>
+      <p class="form-hint">Added to juice before pitching yeast (e.g. 24–48hrs prior)</p>
       <div class="row2">
         <div class="form-group"><label class="form-label">Campden tablets</label><input id="f-campden" placeholder="e.g. 1 tablet" /></div>
         <div class="form-group"><label class="form-label">Pectic enzyme</label><input id="f-pectic" placeholder="e.g. 0.5 tsp" /></div>
       </div>
       <div class="form-group"><label class="form-label">Acid blend</label><input id="f-acid" placeholder="e.g. 1 tsp" /></div>
+      <div class="form-group"><label class="form-label">Other pre-ferm additions</label><input id="f-preferm-other" placeholder="e.g. Bentonite, tannin..." /></div>
     </div>
+
+    <div class="form-wrap">
+      <div class="form-section-label">At pitch</div>
+      <p class="form-hint">Added when pitching yeast</p>
+      <div class="form-group"><label class="form-label">Yeast</label><input id="f-yeast" placeholder="Fleischmann's, EC-1118..." /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Sugar type</label><input id="f-sugar-type" placeholder="Brown sugar, honey..." /></div>
+        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="f-sugar-qty" placeholder="200g, 1 cup..." /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Initial nutrient addition</label><input id="f-initial-nutrient" placeholder="e.g. 2g Fermaid-O" /></div>
+      <div class="form-group"><label class="form-label">Other at-pitch additions</label><input id="f-pitch-other" placeholder="e.g. Energizer, Go-Ferm..." /></div>
+    </div>
+
     <div class="form-wrap">
       <div class="form-section-label">Fermentation</div>
       <div class="form-group"><label class="form-label">Starting SG</label><input id="f-sg" placeholder="1.055" type="number" step="0.001" /></div>
-      <div class="form-group"><label class="form-label">Initial notes</label><textarea id="f-notes" placeholder="Initial observations, aroma..."></textarea></div>
+      <div class="form-group"><label class="form-label">Initial notes</label><textarea id="f-notes" placeholder="Observations, aroma, colour..."></textarea></div>
     </div>
     <button class="btn-primary" onclick="saveBatch()">Save brew</button>
     <button class="btn-secondary" onclick="showTab('batches')">Cancel</button>
   </div>
 
+  <!-- STATS -->
   <div id="sec-stats" class="section body-pad">
     <div class="stat-grid" id="stats-grid"></div>
     <div class="chart-wrap" style="height:200px"><canvas id="stats-chart"></canvas></div>
     <button class="export-btn" onclick="exportCSV()">Export all brews as CSV</button>
   </div>
 
+  <!-- DETAIL -->
   <div id="sec-detail" class="section body-pad">
     <button class="back-btn" onclick="showTab('batches')">← All brews</button>
     <div id="detail-content"></div>
@@ -288,17 +314,8 @@ function today(){return new Date().toISOString().slice(0,10);}
 function daysBetween(a,b){const da=new Date(a),db=new Date(b);da.setHours(0,0,0,0);db.setHours(0,0,0,0);return Math.floor((db-da)/86400000);}
 function daysSince(d){return d?daysBetween(d,today()):null;}
 function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day';return n===1?'1 day':n+' days';}
-
-function doseStatus(dose){
-  if(dose.done) return 'done';
-  if(dose.date < today()) return 'overdue';
-  if(dose.date === today()) return 'due-today';
-  return 'upcoming';
-}
-
-function overdueCount(b){
-  return (b.nutrientSchedule||[]).filter(d=>!d.done && d.date <= today()).length;
-}
+function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';if(d.date===today())return'due-today';return'upcoming';}
+function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 function load(){
   try{batches=JSON.parse(localStorage.getItem('cider_batches_v3')||'[]');}catch(e){batches=[];}
@@ -375,14 +392,12 @@ function renderBatches(){
     const days=stageDate?daysSince(stageDate):null;
     const dayStr=days!==null&&b.status!=='bottled'?(days===0?'today':days+'d in stage'):'';
     const oc=overdueCount(b);
-    const overdueHTML=oc>0?`<span class="${oc>0&&(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today())?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';
+    const hasRealOverdue=(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today());
+    const overdueHTML=oc>0?`<span class="${hasRealOverdue?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';
     return `<div class="batch-card ${st.cardCls}" onclick="showDetail('${b.id}')">
       <div class="batch-row">
         <span class="batch-name">${b.name}</span>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          ${overdueHTML}
-          <span class="status-pill ${st.cls}">${st.short}</span>
-        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
       </div>
       <div class="batch-date">${b.startDate||'No date'} · ${b.qty||'—'}${dayStr?' · '+dayStr:''}</div>
       <div class="meta-row">
@@ -403,12 +418,15 @@ function saveBatch(){
     id:Date.now().toString(),name,
     qty:document.getElementById('f-qty').value.trim(),startDate,
     juice:document.getElementById('f-juice').value.trim(),
-    yeast:document.getElementById('f-yeast').value.trim(),
-    sugarType:document.getElementById('f-sugar-type').value.trim(),
-    sugarQty:document.getElementById('f-sugar-qty').value.trim(),
     campden:document.getElementById('f-campden').value.trim(),
     pectic:document.getElementById('f-pectic').value.trim(),
     acid:document.getElementById('f-acid').value.trim(),
+    prefermOther:document.getElementById('f-preferm-other').value.trim(),
+    yeast:document.getElementById('f-yeast').value.trim(),
+    sugarType:document.getElementById('f-sugar-type').value.trim(),
+    sugarQty:document.getElementById('f-sugar-qty').value.trim(),
+    initialNutrient:document.getElementById('f-initial-nutrient').value.trim(),
+    pitchOther:document.getElementById('f-pitch-other').value.trim(),
     startingSG:sg,
     notes:document.getElementById('f-notes').value.trim(),
     sgReadings:[],nutrientLog:[],nutrientSchedule:[],ingredientLog:[],
@@ -416,7 +434,7 @@ function saveBatch(){
   };
   if(sg)b.sgReadings.push({date:startDate,val:sg});
   batches.push(b);save();
-  ['f-name','f-qty','f-juice','f-yeast','f-sugar-type','f-sugar-qty','f-campden','f-pectic','f-acid','f-sg','f-notes'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-qty','f-juice','f-campden','f-pectic','f-acid','f-preferm-other','f-yeast','f-sugar-type','f-sugar-qty','f-initial-nutrient','f-pitch-other','f-sg','f-notes'].forEach(id=>document.getElementById(id).value='');
   renderBatches();showTab('batches');
 }
 
@@ -438,44 +456,111 @@ function setStatus(s){
   syncBatch();renderDetail();renderBatches();
 }
 
-function stageTimerHTML(b, editing=false){
+/* ---- EDIT DETAILS ---- */
+function showEditDetails(){
+  const b=currentBatch;
+  const el=document.getElementById('edit-details-panel');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="form-wrap" style="margin-top:1rem">
+      <div class="form-section-label">Brew info</div>
+      <div class="form-group"><label class="form-label">Batch name</label><input id="e-name" value="${b.name||''}" /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Quantity</label><input id="e-qty" value="${b.qty||''}" /></div>
+        <div class="form-group"><label class="form-label">Start date</label><input id="e-date" type="date" value="${b.startDate||''}" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Apple juice / base</label><input id="e-juice" value="${b.juice||''}" placeholder="Brand, type, volume..." /></div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Pre-fermentation</div>
+      <p class="form-hint">Added before pitching yeast</p>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Campden tablets</label><input id="e-campden" value="${b.campden||''}" placeholder="e.g. 1 tablet" /></div>
+        <div class="form-group"><label class="form-label">Pectic enzyme</label><input id="e-pectic" value="${b.pectic||''}" placeholder="e.g. 0.5 tsp" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Acid blend</label><input id="e-acid" value="${b.acid||''}" placeholder="e.g. 1 tsp" /></div>
+      <div class="form-group"><label class="form-label">Other pre-ferm additions</label><input id="e-preferm-other" value="${b.prefermOther||''}" placeholder="e.g. Bentonite, tannin..." /></div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">At pitch</div>
+      <p class="form-hint">Added when pitching yeast</p>
+      <div class="form-group"><label class="form-label">Yeast</label><input id="e-yeast" value="${b.yeast||''}" placeholder="Fleischmann's, EC-1118..." /></div>
+      <div class="row2">
+        <div class="form-group"><label class="form-label">Sugar type</label><input id="e-sugar-type" value="${b.sugarType||''}" placeholder="Brown sugar, honey..." /></div>
+        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="e-sugar-qty" value="${b.sugarQty||''}" placeholder="200g, 1 cup..." /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Initial nutrient addition</label><input id="e-initial-nutrient" value="${b.initialNutrient||''}" placeholder="e.g. 2g Fermaid-O" /></div>
+      <div class="form-group"><label class="form-label">Other at-pitch additions</label><input id="e-pitch-other" value="${b.pitchOther||''}" placeholder="e.g. Energizer, Go-Ferm..." /></div>
+    </div>
+    <div class="form-wrap">
+      <div class="form-section-label">Fermentation</div>
+      <div class="form-group"><label class="form-label">Starting SG</label><input id="e-sg" type="number" step="0.001" value="${b.startingSG||''}" placeholder="1.055" /></div>
+    </div>
+    <button class="btn-primary" onclick="saveEditDetails()">Save changes</button>
+    <button class="btn-secondary" onclick="cancelEditDetails()">Cancel</button>
+  `;
+  el.style.display='block';
+  document.getElementById('edit-details-btn').style.display='none';
+  document.getElementById('ingredients-display').style.display='none';
+}
+
+function cancelEditDetails(){
+  const el=document.getElementById('edit-details-panel');
+  if(el)el.style.display='none';
+  document.getElementById('edit-details-btn').style.display='';
+  document.getElementById('ingredients-display').style.display='';
+}
+
+function saveEditDetails(){
+  const b=currentBatch;
+  const nameVal=document.getElementById('e-name').value.trim();
+  if(!nameVal){alert('Batch name is required.');return;}
+  b.name=nameVal;
+  b.qty=document.getElementById('e-qty').value.trim();
+  b.startDate=document.getElementById('e-date').value;
+  b.juice=document.getElementById('e-juice').value.trim();
+  b.campden=document.getElementById('e-campden').value.trim();
+  b.pectic=document.getElementById('e-pectic').value.trim();
+  b.acid=document.getElementById('e-acid').value.trim();
+  b.prefermOther=document.getElementById('e-preferm-other').value.trim();
+  b.yeast=document.getElementById('e-yeast').value.trim();
+  b.sugarType=document.getElementById('e-sugar-type').value.trim();
+  b.sugarQty=document.getElementById('e-sugar-qty').value.trim();
+  b.initialNutrient=document.getElementById('e-initial-nutrient').value.trim();
+  b.pitchOther=document.getElementById('e-pitch-other').value.trim();
+  b.startingSG=document.getElementById('e-sg').value.trim();
+  syncBatch();renderDetail();renderBatches();
+}
+
+/* ---- STAGE TIMER ---- */
+function stageTimerHTML(b){
   const s=b.status;if(s==='bottled')return'';
   const st=STATUS[s];
   const stageDate=(b.stageStartDates||{})[s];
   const days=stageDate?daysSince(stageDate):null;
   const numStr=days===null?'—':days===0?'<1':String(days);
   const unit=days===1?'day':'days';
-  const sinceBlock=editing
-    ? `<div class="stage-date-input-row">
-        <input type="date" id="stage-date-input" value="${stageDate||today()}" max="${today()}" />
-        <button class="stage-date-save-btn" onclick="saveStageDate('${s}')">Save date</button>
-        <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
-       </div>`
-    : `<div class="stage-date-row">
-        <span class="stage-timer-since">${stageDate?'since '+stageDate:'no date set'}</span>
-        <button class="stage-date-edit-btn" onclick="editStageDate()">Edit</button>
-       </div>`;
   return `<div class="stage-timer ${st.timerCls}">
     <div style="flex:1">
       <div class="stage-timer-label">Time in stage</div>
       <div class="stage-timer-name">${st.label}</div>
-      ${sinceBlock}
+      <div class="stage-date-row">
+        <span class="stage-timer-since">${stageDate?'since '+stageDate:'no date set'}</span>
+        <button class="stage-date-edit-btn" onclick="editStageDate()">Edit</button>
+      </div>
     </div>
     <div class="stage-days"><div class="stage-days-num">${numStr}</div><div class="stage-days-unit">${unit}</div></div>
   </div>`;
 }
 
 function editStageDate(){
-  const b=currentBatch;
-  const s=b.status;if(s==='bottled')return;
+  const b=currentBatch;const s=b.status;if(s==='bottled')return;
   const st=STATUS[s];
   const stageDate=(b.stageStartDates||{})[s];
   const days=stageDate?daysSince(stageDate):null;
   const numStr=days===null?'—':days===0?'<1':String(days);
   const unit=days===1?'day':'days';
-  const timerEl=document.querySelector('.stage-timer');
-  if(!timerEl)return;
-  timerEl.innerHTML=`
+  document.querySelector('.stage-timer').innerHTML=`
     <div style="flex:1">
       <div class="stage-timer-label">Time in stage</div>
       <div class="stage-timer-name">${st.label}</div>
@@ -497,120 +582,100 @@ function saveStageDate(s){
   syncBatch();renderDetail();renderBatches();
 }
 
+/* ---- DOSE BANNERS ---- */
 function doseBannersHTML(b){
   const sched=b.nutrientSchedule||[];
   const overdue=sched.filter(d=>!d.done&&d.date<today());
   const dueToday=sched.filter(d=>!d.done&&d.date===today());
   let html='';
-  if(overdue.length){
-    html+=`<div class="overdue-banner">
-      <div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>
-      ${overdue.map(d=>`<div class="overdue-banner-item">• ${d.amount}${d.unit?' '+d.unit:''} — was due ${d.date}</div>`).join('')}
-    </div>`;
-  }
-  if(dueToday.length){
-    html+=`<div class="due-today-banner">
-      <div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>
-      ${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.amount}${d.unit?' '+d.unit:''}</div>`).join('')}
-    </div>`;
+  if(overdue.length)html+=`<div class="overdue-banner"><div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>${overdue.map(d=>`<div class="overdue-banner-item">• ${d.amount}${d.unit?' '+d.unit:''} — was due ${d.date}</div>`).join('')}</div>`;
+  if(dueToday.length)html+=`<div class="due-today-banner"><div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.amount}${d.unit?' '+d.unit:''}</div>`).join('')}</div>`;
+  return html;
+}
+
+/* ---- INGREDIENTS DISPLAY ---- */
+function ingredientsDisplayHTML(b){
+  const preferm=[
+    {name:'Campden tablets',val:b.campden},
+    {name:'Pectic enzyme',val:b.pectic},
+    {name:'Acid blend',val:b.acid},
+    {name:'Other',val:b.prefermOther},
+  ].filter(i=>i.val);
+  const atpitch=[
+    {name:'Yeast',val:b.yeast},
+    {name:'Sugar',val:b.sugarType?(b.sugarType+(b.sugarQty?' — '+b.sugarQty:'')):null},
+    {name:'Initial nutrient',val:b.initialNutrient},
+    {name:'Other',val:b.pitchOther},
+  ].filter(i=>i.val);
+  const base=[
+    {name:'Apple juice / base',val:b.juice},
+  ].filter(i=>i.val);
+
+  let html='';
+  if(base.length||preferm.length||atpitch.length){
+    html+=`<div class="ing-section">`;
+    if(base.length){
+      html+=`<div class="ing-section-head">Base</div>`;
+      html+=base.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+    }
+    if(preferm.length){
+      html+=`<div class="ing-section-head">Pre-fermentation</div>`;
+      html+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+    }
+    if(atpitch.length){
+      html+=`<div class="ing-section-head">At pitch</div>`;
+      html+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+    }
+    html+=`</div>`;
   }
   return html;
 }
 
-function stageHistoryHTML(b){
-  const history=b.stageHistory||[];
-  const cur=b.status;
-  const curStart=(b.stageStartDates||{})[cur];
-  const curDays=curStart?daysSince(curStart):null;
-  const rows=[...history.map(h=>({...h,ongoing:false})),{stage:cur,startDate:curStart||null,endDate:null,days:curDays,ongoing:cur!=='bottled'}];
-  if(!rows.length)return'';
-  const rowsHTML=rows.map(r=>{
-    const st=STATUS[r.stage]||STATUS.primary;
-    const dateRange=r.startDate?(r.endDate?r.startDate+' → '+r.endDate:r.startDate+' → now'):'—';
-    const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
-    return `<div class="stage-history-row">
-      <div class="sh-left"><div class="sh-dot s-${r.stage}"></div>
-        <div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div></div>
-      </div>
-      <div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div>
-    </div>`;
-  }).join('');
-  return `<div class="section-head">Stage history</div><div class="stage-history">${rowsHTML}</div>`;
-}
-
-function additivesHTML(b){
-  const items=[
-    {name:'Apple juice / base',val:b.juice},
-    {name:'Yeast',val:b.yeast},
-    {name:'Sugar',val:b.sugarType?(b.sugarType+(b.sugarQty?' — '+b.sugarQty:'')):null},
-    {name:'Campden',val:b.campden},
-    {name:'Pectic enzyme',val:b.pectic},
-    {name:'Acid blend',val:b.acid},
-  ].filter(i=>i.val);
-  if(!items.length)return'';
-  return `<div class="section-head">Ingredients at pitch</div>
-  <div class="additive-grid">${items.map(i=>`<div class="additive-card"><div class="additive-name">${i.name}</div><div class="additive-val">${i.val}</div></div>`).join('')}</div>`;
-}
-
+/* ---- NUTRIENT SECTION ---- */
 function nutrientSectionHTML(b){
   const sched=(b.nutrientSchedule||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const log=(b.nutrientLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
-
   const schedRows=sched.length
     ? sched.map((d,i)=>{
         const st=doseStatus(d);
         const tagLabel={overdue:'Overdue',upcoming:'Upcoming','due-today':'Due today',done:'Done'}[st];
-        const doneBtn=d.done
-          ? `<button class="done-btn undone" onclick="undoseDose(${i})">Undo</button>`
-          : `<button class="done-btn" onclick="markDoseDone(${i})">Done</button>`;
         return `<div class="sched-row ${st}">
-          <div class="sched-left">
-            <div class="sched-main">${d.amount}${d.unit?' '+d.unit:''}</div>
-            <div class="sched-date">${d.date}</div>
-          </div>
+          <div class="sched-left"><div class="sched-main">${d.amount}${d.unit?' '+d.unit:''}</div><div class="sched-date">${d.date}</div></div>
           <div class="sched-actions">
             <span class="sched-tag ${st}">${tagLabel}</span>
-            ${!d.done?doneBtn:''}
+            ${!d.done?`<button class="done-btn" onclick="markDoseDone(${i})">Done</button>`:''}
             <button class="log-del" onclick="deleteScheduledDose(${i})">×</button>
           </div>
         </div>`;
       }).join('')
     : `<div class="log-empty">No doses scheduled yet.</div>`;
-
   const logRows=log.length
-    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row">
-        <div><div class="log-main">${e.amount}${e.unit?' '+e.unit:''}</div><div class="log-sub">${e.date}</div></div>
-        <div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div>
-      </div>`).join('')
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.amount}${e.unit?' '+e.unit:''}</div><div class="log-sub">${e.date}</div></div><div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div></div>`).join('')
     : `<div class="log-empty">No doses logged yet.</div>`;
-
   return `<div class="section-head">Yeast nutrient schedule</div>
-  <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Schedule upcoming doses — mark as done when added.</p>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Schedule upcoming doses — tap Done when added.</p>
   <div class="log-add">
     <input class="date-inp" id="sched-date" type="date" value="${today()}" />
     <input id="sched-amt" placeholder="Amount" />
-    <input class="unit-inp" id="sched-unit" placeholder="Unit (g, tsp...)" />
+    <input class="unit-inp" id="sched-unit" placeholder="Unit" />
     <button onclick="addScheduledDose()">+ Schedule</button>
   </div>
   <div class="log-list">${schedRows}</div>
-
   <div class="section-head">Nutrient additions log</div>
   <div class="log-add">
     <input class="date-inp" id="nut-date" type="date" value="${today()}" />
     <input id="nut-amt" placeholder="Amount" />
-    <input class="unit-inp" id="nut-unit" placeholder="Unit (g, tsp...)" />
+    <input class="unit-inp" id="nut-unit" placeholder="Unit" />
     <button onclick="addNutrient()">+ Log</button>
   </div>
   <div class="log-list">${logRows}</div>`;
 }
 
+/* ---- INGREDIENT LOG ---- */
 function ingredientLogHTML(b){
   const log=(b.ingredientLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const rows=log.length
-    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row">
-        <div><div class="log-main">${e.name}${e.qty?' — '+e.qty+(e.unit?' '+e.unit:''):''}</div><div class="log-sub">${e.date}${e.note?' · '+e.note:''}</div></div>
-        <div class="log-right"><button class="log-del" onclick="deleteIngredient(${arr.length-1-i})">×</button></div>
-      </div>`).join('')
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name}${e.qty?' — '+e.qty+(e.unit?' '+e.unit:''):''}</div><div class="log-sub">${e.date}${e.note?' · '+e.note:''}</div></div><div class="log-right"><button class="log-del" onclick="deleteIngredient(${arr.length-1-i})">×</button></div></div>`).join('')
     : `<div class="log-empty">No additions logged yet.</div>`;
   return `<div class="section-head">Other ingredients / additions</div>
   <div class="log-add">
@@ -624,27 +689,57 @@ function ingredientLogHTML(b){
   <div class="log-list">${rows}</div>`;
 }
 
+/* ---- STAGE HISTORY ---- */
+function stageHistoryHTML(b){
+  const history=b.stageHistory||[];
+  const cur=b.status;
+  const curStart=(b.stageStartDates||{})[cur];
+  const curDays=curStart?daysSince(curStart):null;
+  const rows=[...history.map(h=>({...h,ongoing:false})),{stage:cur,startDate:curStart||null,endDate:null,days:curDays,ongoing:cur!=='bottled'}];
+  if(!rows.length)return'';
+  const rowsHTML=rows.map(r=>{
+    const st=STATUS[r.stage]||STATUS.primary;
+    const dateRange=r.startDate?(r.endDate?r.startDate+' → '+r.endDate:r.startDate+' → now'):'—';
+    const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
+    return `<div class="stage-history-row"><div class="sh-left"><div class="sh-dot s-${r.stage}"></div><div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div></div></div><div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div></div>`;
+  }).join('');
+  return `<div class="section-head">Stage history</div><div class="stage-history">${rowsHTML}</div>`;
+}
+
+/* ---- RENDER DETAIL ---- */
 function renderDetail(){
   const b=currentBatch;
   const abv=calcABV(b);
   const readings=(b.sgReadings||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const curStatus=b.status||'primary';
   document.getElementById('detail-content').innerHTML=`
-    <div class="detail-title">${b.name}</div>
-    <div class="detail-sub">Started ${b.startDate||'—'} · ${b.qty||'—'}</div>
-    ${doseBannersHTML(b)}
-    ${stageTimerHTML(b)}
-    <div class="section-head">Status</div>
-    <div class="status-switcher">
-      ${Object.entries(STATUS).map(([k,v])=>`<button class="status-opt${curStatus===k?' active '+v.optCls:''}" onclick="setStatus('${k}')">${v.label}</button>`).join('')}
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-title">${b.name}</div>
+        <div class="detail-sub">Started ${b.startDate||'—'} · ${b.qty||'—'}</div>
+      </div>
+      <button id="edit-details-btn" class="edit-details-btn" onclick="showEditDetails()">Edit details</button>
     </div>
-    <div class="info-grid">
-      <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
-      <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
+
+    <div id="edit-details-panel" style="display:none"></div>
+
+    <div id="ingredients-display">
+      ${doseBannersHTML(b)}
+      ${stageTimerHTML(b)}
+      <div class="section-head">Status</div>
+      <div class="status-switcher">
+        ${Object.entries(STATUS).map(([k,v])=>`<button class="status-opt${curStatus===k?' active '+v.optCls:''}" onclick="setStatus('${k}')">${v.label}</button>`).join('')}
+      </div>
+      <div class="info-grid">
+        <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
+        <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
+      </div>
+      ${ingredientsDisplayHTML(b)}
     </div>
-    ${additivesHTML(b)}
+
     ${nutrientSectionHTML(b)}
     ${ingredientLogHTML(b)}
+
     <div class="section-head">SG readings</div>
     <div class="log-add">
       <input class="date-inp" id="new-sg-date" type="date" value="${today()}" />
@@ -654,13 +749,14 @@ function renderDetail(){
     <div class="chart-wrap"><canvas id="sg-chart"></canvas></div>
     <div class="log-list" style="margin-bottom:1.25rem">
       ${readings.length?readings.slice().reverse().map((r,i,arr)=>{
-        const prev=arr[i+1];
-        let trend='';
+        const prev=arr[i+1];let trend='';
         if(prev){const diff=parseFloat(r.val)-parseFloat(prev.val);trend=diff<-0.001?'<span class="sg-trend down">fermenting</span>':'<span class="sg-trend same">stable</span>';}
         return `<div class="log-row"><div class="log-sub" style="font-size:14px">${r.date}</div><div style="font-weight:600">${r.val}${trend}</div></div>`;
       }).join(''):`<div class="log-empty">No readings yet.</div>`}
     </div>
+
     ${stageHistoryHTML(b)}
+
     <div class="section-head">Tasting notes</div>
     <textarea id="tasting-area" placeholder="Aroma, flavour, review...">${b.notes||''}</textarea>
     <button class="btn-primary" style="margin-top:10px" onclick="saveNotes()">Save notes</button>
@@ -669,6 +765,7 @@ function renderDetail(){
   setTimeout(()=>renderSGChart(readings),50);
 }
 
+/* ---- LOG ACTIONS ---- */
 function addScheduledDose(){
   const date=document.getElementById('sched-date').value||today();
   const amount=document.getElementById('sched-amt').value.trim();
@@ -679,7 +776,6 @@ function addScheduledDose(){
   currentBatch.nutrientSchedule.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();renderBatches();
 }
-
 function markDoseDone(idx){
   currentBatch.nutrientSchedule[idx].done=true;
   const d=currentBatch.nutrientSchedule[idx];
@@ -688,17 +784,7 @@ function markDoseDone(idx){
   currentBatch.nutrientLog.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();renderBatches();
 }
-
-function undoseDose(idx){
-  currentBatch.nutrientSchedule[idx].done=false;
-  syncBatch();renderDetail();renderBatches();
-}
-
-function deleteScheduledDose(idx){
-  currentBatch.nutrientSchedule.splice(idx,1);
-  syncBatch();renderDetail();renderBatches();
-}
-
+function deleteScheduledDose(idx){currentBatch.nutrientSchedule.splice(idx,1);syncBatch();renderDetail();renderBatches();}
 function addNutrient(){
   const date=document.getElementById('nut-date').value||today();
   const amount=document.getElementById('nut-amt').value.trim();
@@ -709,12 +795,7 @@ function addNutrient(){
   currentBatch.nutrientLog.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();
 }
-
-function deleteNutrient(idx){
-  currentBatch.nutrientLog.splice(idx,1);
-  syncBatch();renderDetail();
-}
-
+function deleteNutrient(idx){currentBatch.nutrientLog.splice(idx,1);syncBatch();renderDetail();}
 function addIngredient(){
   const date=document.getElementById('ing-date').value||today();
   const name=document.getElementById('ing-name').value.trim();
@@ -727,12 +808,7 @@ function addIngredient(){
   currentBatch.ingredientLog.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();
 }
-
-function deleteIngredient(idx){
-  currentBatch.ingredientLog.splice(idx,1);
-  syncBatch();renderDetail();
-}
-
+function deleteIngredient(idx){currentBatch.ingredientLog.splice(idx,1);syncBatch();renderDetail();}
 function addSGReading(){
   const date=document.getElementById('new-sg-date').value||today();
   const val=document.getElementById('new-sg-val').value.trim();
@@ -742,7 +818,6 @@ function addSGReading(){
   currentBatch.sgReadings.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();
 }
-
 function saveNotes(){
   currentBatch.notes=document.getElementById('tasting-area').value;
   syncBatch();
@@ -750,13 +825,13 @@ function saveNotes(){
   btn.textContent='Saved!';btn.style.background='#1D9E75';
   setTimeout(()=>{btn.textContent='Save notes';btn.style.background='#412402';},1400);
 }
-
 function deleteBatch(id){
   if(!confirm('Delete this brew?'))return;
   batches=batches.filter(b=>b.id!==id);
   save();renderBatches();showTab('batches');
 }
 
+/* ---- CHARTS ---- */
 function renderSGChart(readings){
   const ctx=document.getElementById('sg-chart');
   if(!ctx)return;
@@ -776,8 +851,7 @@ function renderStats(){
   const active=batches.filter(b=>b.status!=='bottled').length;
   const abvVals=batches.map(b=>calcABV(b)).filter(Boolean).map(Number);
   const avgABV=abvVals.length?(abvVals.reduce((a,b)=>a+b,0)/abvVals.length).toFixed(1):'—';
-  const yeasts={};
-  batches.forEach(b=>{if(b.yeast)yeasts[b.yeast]=(yeasts[b.yeast]||0)+1;});
+  const yeasts={};batches.forEach(b=>{if(b.yeast)yeasts[b.yeast]=(yeasts[b.yeast]||0)+1;});
   const topYeast=Object.entries(yeasts).sort((a,b)=>b[1]-a[1])[0];
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat-card"><div class="stat-label">Total brews</div><div class="stat-val">${batches.length}</div></div>
@@ -798,15 +872,16 @@ function renderStats(){
   }}});
 }
 
+/* ---- CSV EXPORT ---- */
 function exportCSV(){
-  const rows=[['Batch','Quantity','Start date','Juice/base','Yeast','Sugar type','Sugar qty','Campden','Pectic enzyme','Acid blend','Starting SG','Latest SG','Est. ABV%','Status','Scheduled doses','Nutrient additions','Other ingredients','Notes']];
+  const rows=[['Batch','Quantity','Start date','Juice/base','Campden','Pectic enzyme','Acid blend','Pre-ferm other','Yeast','Sugar type','Sugar qty','Initial nutrient','Pitch other','Starting SG','Latest SG','Est. ABV%','Status','Scheduled doses','Nutrient additions','Other ingredients','Notes']];
   batches.forEach(b=>{
     const readings=b.sgReadings||[];
     const lastSG=readings.length?readings[readings.length-1].val:'';
     const scheduled=(b.nutrientSchedule||[]).map(d=>`${d.date}: ${d.amount}${d.unit?' '+d.unit:''}${d.done?' (done)':''}`).join('; ');
     const nutrients=(b.nutrientLog||[]).map(e=>`${e.date}: ${e.amount}${e.unit?' '+e.unit:''}`).join('; ');
     const ingredients=(b.ingredientLog||[]).map(e=>`${e.date}: ${e.name}${e.qty?' '+e.qty+(e.unit?' '+e.unit:''):''}`).join('; ');
-    rows.push([b.name,b.qty||'',b.startDate||'',b.juice||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.campden||'',b.pectic||'',b.acid||'',b.startingSG||'',lastSG,calcABV(b)||'',STATUS[b.status]?.label||b.status,scheduled,nutrients,ingredients,(b.notes||'').replace(/"/g,'""')]);
+    rows.push([b.name,b.qty||'',b.startDate||'',b.juice||'',b.campden||'',b.pectic||'',b.acid||'',b.prefermOther||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.initialNutrient||'',b.pitchOther||'',b.startingSG||'',lastSG,calcABV(b)||'',STATUS[b.status]?.label||b.status,scheduled,nutrients,ingredients,(b.notes||'').replace(/"/g,'""')]);
   });
   const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
@@ -815,9 +890,7 @@ function exportCSV(){
   URL.revokeObjectURL(url);
 }
 
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
-}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}
 document.getElementById('f-date').value=today();
 load();
 </script>

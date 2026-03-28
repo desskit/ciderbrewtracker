@@ -590,19 +590,68 @@
     </div>
 
     <div class="form-wrap" style="margin-bottom:1rem">
+      <div class="form-section-label">Units &amp; preferences</div>
+
+      <div class="form-group">
+        <label class="form-label">Currency symbol</label>
+        <select id="pref-currency" onchange="savePref('currency',this.value);applyPrefs()">
+          <option value="$">$ — Dollar</option>
+          <option value="£">£ — Pound</option>
+          <option value="€">€ — Euro</option>
+          <option value="A$">A$ — Australian Dollar</option>
+          <option value="C$">C$ — Canadian Dollar</option>
+          <option value="¥">¥ — Yen / Yuan</option>
+          <option value="kr">kr — Krona</option>
+          <option value="CHF">CHF — Swiss Franc</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Temperature unit</label>
+        <select id="pref-temp" onchange="savePref('temp',this.value)">
+          <option value="F">°F — Fahrenheit</option>
+          <option value="C">°C — Celsius</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Volume preference</label>
+        <select id="pref-volume" onchange="savePref('volume',this.value)">
+          <option value="gal">US gallons (G)</option>
+          <option value="L">Litres (L)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Date format</label>
+        <select id="pref-date" onchange="savePref('dateFormat',this.value);applyPrefs()">
+          <option value="YYYY-MM-DD">YYYY-MM-DD (ISO / default)</option>
+          <option value="DD/MM/YYYY">DD/MM/YYYY (UK / EU)</option>
+          <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
+          <option value="D MMM YYYY">D MMM YYYY (e.g. 28 Mar 2026)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-wrap" style="margin-bottom:1rem">
       <div class="form-section-label">Data</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="export-btn" onclick="exportJSON()">Backup all data (JSON)</button>
         <button class="export-btn" style="background:none;border-color:var(--border);color:var(--text-muted)" onclick="exportCSV()">Export as CSV (for spreadsheets)</button>
         <button class="export-btn" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5" onclick="triggerImport()">Import from backup</button>
         <input type="file" id="import-file-input" accept=".json,.csv" style="display:none" onchange="handleImport(event)"/>
+        <button class="export-btn" style="background:none;border-color:#f5c6c6;color:#c0392b;margin-top:4px" onclick="nukeAllData()">Clear all data</button>
       </div>
     </div>
 
     <div class="form-wrap">
       <div class="form-section-label">About</div>
-      <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
-        <b style="color:var(--text)">Cider Log</b> — Craft Cider Tracker<br>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.8">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <b style="color:var(--text);font-size:15px">Cider Log</b>
+          <span style="background:#FAEEDA;color:#633806;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px" id="version-badge">v1.0.0</span>
+        </div>
+        Craft Cider Tracker<br>
         All data stored locally on your device.<br>
         Use JSON backup to transfer between devices.
       </div>
@@ -646,6 +695,72 @@ function daysSince(d){return d?daysBetween(d,today()):null;}
 function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day';return n===1?'1 day':n+' days';}
 function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';if(d.date===today())return'due-today';return'upcoming';}
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
+
+/* ---- APP VERSION ---- */
+const APP_VERSION = '1.0.0';
+
+/* ---- PREFERENCES ---- */
+let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
+
+function loadPrefs(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('cider_prefs')||'{}');
+    prefs = {...prefs, ...saved};
+  }catch(e){}
+}
+
+function savePref(key, val){
+  prefs[key] = val;
+  localStorage.setItem('cider_prefs', JSON.stringify(prefs));
+}
+
+function applyPrefs(){
+  // sync selects to saved prefs
+  const fields = {
+    'pref-currency':'currency',
+    'pref-temp':'temp',
+    'pref-volume':'volume',
+    'pref-date':'dateFormat'
+  };
+  Object.entries(fields).forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if(el) el.value = prefs[key]||'';
+  });
+  const vb = document.getElementById('version-badge');
+  if(vb) vb.textContent = 'v'+APP_VERSION;
+}
+
+function fmtDate(isoStr){
+  if(!isoStr) return '—';
+  const fmt = prefs.dateFormat||'YYYY-MM-DD';
+  if(fmt==='YYYY-MM-DD') return isoStr;
+  const [y,m,d] = isoStr.split('-');
+  if(fmt==='DD/MM/YYYY') return `${d}/${m}/${y}`;
+  if(fmt==='MM/DD/YYYY') return `${m}/${d}/${y}`;
+  if(fmt==='D MMM YYYY'){
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+  }
+  return isoStr;
+}
+
+function curr(val){
+  return (prefs.currency||'$')+parseFloat(val).toFixed(2);
+}
+
+function nukeAllData(){
+  if(!confirm('This will permanently delete ALL brews, recipes and settings. This cannot be undone.
+
+Are you absolutely sure?')) return;
+  if(!confirm('Last chance — delete everything?')) return;
+  localStorage.removeItem('cider_batches_v3');
+  localStorage.removeItem('cider_recipes_v1');
+  batches=[];recipes=[];
+  save();saveRecipes();
+  renderBatches();renderRecipes();
+  alert('All data cleared.');
+  showTab('batches');
+}
 
 /* ---- DARK MODE ---- */
 function applyTheme(dark){
@@ -718,7 +833,7 @@ function showTab(t){
   if(t==='add')document.getElementById('f-date').value=today();
   if(t==='recipes')renderRecipes();
   if(t==='compare')initCompare();
-  if(t==='settings')updateDarkToggleUI();
+  if(t==='settings'){updateDarkToggleUI();applyPrefs();}
 }
 
 function showDetail(id){
@@ -1444,7 +1559,7 @@ function bottleYieldHTML(b){
     ${count||size?`<div style="display:flex;gap:10px;flex-wrap:wrap">
       ${count?`<span style="font-size:13px;color:var(--text-muted)">Bottles: <b style="color:var(--text)">${count}</b></span>`:''}
       ${totalL?`<span style="font-size:13px;color:var(--text-muted)">Total: <b style="color:var(--text)">${totalL}L</b></span>`:''}
-      ${cpp?`<span style="font-size:13px;color:#085041">Cost/bottle: <b>$${cpp}</b></span>`:''}
+      ${cpp?`<span style="font-size:13px;color:#085041">Cost/bottle: <b>${curr(cpp)}</b></span>`:''}
     </div>`:''}
   </div>`;
 }
@@ -1563,8 +1678,8 @@ function renderComparison(){
         ${row('Latest SG',rdgsA.length?rdgsA[rdgsA.length-1].val:null,rdgsB.length?rdgsB[rdgsB.length-1].val:null)}
         ${row('Est. ABV',abvA?'~'+abvA+'%':null,abvB?'~'+abvB+'%':null)}
         ${row('Bottles',a.bottleCount,b.bottleCount)}
-        ${row('Total cost',costA?'$'+costA.toFixed(2):null,costB?'$'+costB.toFixed(2):null)}
-        ${row('Cost / bottle',cppA?'$'+cppA:null,cppB?'$'+cppB:null)}
+        ${row('Total cost',costA?curr(costA):null,costB?curr(costB):null)}
+        ${row('Cost / bottle',cppA?curr(cppA):null,cppB?curr(cppB):null)}
         ${row('Status',STATUS[a.status]?.short,STATUS[b.status]?.short)}
       </table>
     </div>
@@ -1858,7 +1973,7 @@ function startBrewFromRecipe(id){
   document.getElementById('f-name').focus();
 }
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}
-initTheme();
+loadPrefs();initTheme();
 document.getElementById('f-date').value=today();
 load();
 </script>

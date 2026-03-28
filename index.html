@@ -201,6 +201,7 @@
     .sh-name { font-size: 13px; font-weight: 600; }
     .sh-dates { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
     .sh-duration { font-size: 13px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .sh-ts { font-size: 11px; color: var(--text-muted); opacity: 0.7; margin-top: 1px; }
     .sh-duration.ongoing { color: #1D9E75; }
 
     .back-btn { background: none; border: none; font-size: 14px; color: #BA7517; cursor: pointer; padding: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 4px; font-family: inherit; font-weight: 600; }
@@ -454,7 +455,12 @@
     <div class="stat-grid" id="stats-grid"></div>
     <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>ABV by batch</div>
     <div class="chart-wrap" style="height:200px"><canvas id="stats-chart"></canvas></div>
-    <button class="export-btn" onclick="exportCSV()">Export all brews as CSV</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+      <button class="export-btn" onclick="exportJSON()">Backup all data (JSON)</button>
+      <button class="export-btn" style="background:none;border-color:var(--border);color:var(--text-muted)" onclick="exportCSV()">Export as CSV (for spreadsheets)</button>
+      <button class="export-btn" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5" onclick="triggerImport()">Import from backup</button>
+      <input type="file" id="import-file-input" accept=".json,.csv" style="display:none" onchange="handleImport(event)"/>
+    </div>
   </div>
 
   <!-- DETAIL -->
@@ -533,7 +539,7 @@ const STATUS={
 };
 
 function today(){return new Date().toISOString().slice(0,10);}
-function daysBetween(a,b){const da=new Date(a),db=new Date(b);da.setHours(0,0,0,0);db.setHours(0,0,0,0);return Math.floor((db-da)/86400000);}
+function daysBetween(a,b){const da=new Date(a+'T12:00:00'),db=new Date(b+'T12:00:00');da.setHours(0,0,0,0);db.setHours(0,0,0,0);return Math.floor((db-da)/86400000);}
 function daysSince(d){return d?daysBetween(d,today()):null;}
 function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day';return n===1?'1 day':n+' days';}
 function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';if(d.date===today())return'due-today';return'upcoming';}
@@ -593,7 +599,7 @@ function calcABV(b){
   const readings=b.sgReadings||[];
   const fg=readings.length?parseFloat(readings[readings.length-1].val):NaN;
   if(isNaN(og)||isNaN(fg)||fg>=og)return null;
-  return ((og-fg)*131.25).toFixed(1);
+  return ((og-fg)*131.25).toFixed(2);
 }
 
 function filteredBatches(){
@@ -677,7 +683,8 @@ function setStatus(s){
   const prevStart=(currentBatch.stageStartDates||{})[prev];
   const duration=prevStart?daysBetween(prevStart,today()):null;
   currentBatch.stageHistory=currentBatch.stageHistory||[];
-  currentBatch.stageHistory.push({stage:prev,startDate:prevStart||today(),endDate:today(),days:duration});
+  const now=new Date();const ts=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  currentBatch.stageHistory.push({stage:prev,startDate:prevStart||today(),endDate:today(),days:duration,recordedAt:ts});
   currentBatch.status=s;
   if(!currentBatch.stageStartDates)currentBatch.stageStartDates={};
   if(!currentBatch.stageStartDates[s])currentBatch.stageStartDates[s]=today();
@@ -923,15 +930,51 @@ function stageHistoryHTML(b){
   const cur=b.status;
   const curStart=(b.stageStartDates||{})[cur];
   const curDays=curStart?daysSince(curStart):null;
-  const rows=[...history.map(h=>({...h,ongoing:false})),{stage:cur,startDate:curStart||null,endDate:null,days:curDays,ongoing:cur!=='bottled'}];
+  const rows=[...history.map((h,i)=>({...h,ongoing:false,histIdx:i})),{stage:cur,startDate:curStart||null,endDate:null,days:curDays,ongoing:cur!=='bottled',histIdx:-1}];
   if(!rows.length)return'';
   const rowsHTML=rows.map(r=>{
     const st=STATUS[r.stage]||STATUS.primary;
     const dateRange=r.startDate?(r.endDate?r.startDate+' → '+r.endDate:r.startDate+' → now'):'—';
     const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
-    return `<div class="stage-history-row"><div class="sh-left"><div class="sh-dot s-${r.stage}"></div><div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div></div></div><div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div></div>`;
+    const ts=r.recordedAt?`<div class="sh-ts">recorded ${r.recordedAt}</div>`:'';
+    const editBtns=r.histIdx>=0?`<div style="display:flex;gap:4px;margin-left:8px"><button class="log-del" style="font-size:12px;color:#BA7517" onclick="editStageHistoryEntry(${r.histIdx})">✎</button><button class="log-del" onclick="deleteStageHistoryEntry(${r.histIdx})">×</button></div>`:'';
+    return `<div class="stage-history-row"><div class="sh-left"><div class="sh-dot s-${r.stage}"></div><div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div>${ts}</div></div><div style="display:flex;align-items:center"><div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div>${editBtns}</div></div>`;
   }).join('');
   return `<div class="section-head">Stage history</div><div class="stage-history">${rowsHTML}</div>`;
+}
+
+function editStageHistoryEntry(idx){
+  const entry=currentBatch.stageHistory[idx];
+  if(!entry)return;
+  const el=document.querySelectorAll('.stage-history-row')[idx];
+  if(!el)return;
+  el.innerHTML=`
+    <div style="width:100%;padding:4px 0">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">${STATUS[entry.stage]?.label||entry.stage}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Start date</div><input type="date" id="she-start-${idx}" value="${entry.startDate||''}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">End date</div><input type="date" id="she-end-${idx}" value="${entry.endDate||''}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="stage-date-save-btn" onclick="saveStageHistoryEntry(${idx})">Save</button>
+        <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function saveStageHistoryEntry(idx){
+  const startVal=document.getElementById('she-start-'+idx)?.value;
+  const endVal=document.getElementById('she-end-'+idx)?.value;
+  if(startVal)currentBatch.stageHistory[idx].startDate=startVal;
+  if(endVal)currentBatch.stageHistory[idx].endDate=endVal;
+  if(startVal&&endVal)currentBatch.stageHistory[idx].days=daysBetween(startVal,endVal);
+  syncBatch();renderDetail();
+}
+
+function deleteStageHistoryEntry(idx){
+  if(!confirm('Remove this stage history entry?'))return;
+  currentBatch.stageHistory.splice(idx,1);
+  syncBatch();renderDetail();
 }
 
 /* ---- RENDER DETAIL ---- */
@@ -972,11 +1015,11 @@ function renderDetail(){
       <button onclick="addSGReading()">+ Add</button>
     </div>
     <div class="chart-wrap"><canvas id="sg-chart"></canvas></div>
-    <div class="log-list" style="margin-bottom:1.25rem">
+    <div class="log-list" style="margin-bottom:1.25rem" id="sg-reading-list">
       ${readings.length?readings.map((r,i,arr)=>{
         const prev=arr[i-1];let trend='';
         if(prev){const diff=parseFloat(r.val)-parseFloat(prev.val);trend=diff<-0.001?'<span class="sg-trend down">fermenting</span>':'<span class="sg-trend same">stable</span>';}
-        return `<div class="log-row"><div class="log-sub" style="font-size:14px">${r.date}</div><div style="font-weight:600">${r.val}${trend}</div></div>`;
+        return `<div class="log-row" id="sg-row-${i}"><div class="log-sub" style="font-size:14px">${r.date}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600">${r.val}</span>${trend}<button class="log-del" style="font-size:12px;color:#BA7517" onclick="editSGReading(${i})">✎</button><button class="log-del" onclick="deleteSGReading(${i})">×</button></div></div>`;
       }).join(''):`<div class="log-empty">No readings yet.</div>`}
     </div>
 
@@ -1041,6 +1084,35 @@ function addSGReading(){
   currentBatch.sgReadings=currentBatch.sgReadings||[];
   currentBatch.sgReadings.push({date,val});
   currentBatch.sgReadings.sort((a,b)=>a.date.localeCompare(b.date));
+  syncBatch();renderDetail();
+}
+
+function editSGReading(idx){
+  const r=currentBatch.sgReadings[idx];
+  if(!r)return;
+  const row=document.getElementById('sg-row-'+idx);
+  if(!row)return;
+  row.innerHTML=`
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%">
+      <input type="date" id="sg-edit-date-${idx}" value="${r.date}" style="font-size:13px;padding:5px 8px;width:135px;flex:none"/>
+      <input type="number" step="0.001" id="sg-edit-val-${idx}" value="${r.val}" style="font-size:13px;padding:5px 8px;flex:1;min-width:80px"/>
+      <button class="stage-date-save-btn" onclick="saveSGReading(${idx})">Save</button>
+      <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
+    </div>`;
+}
+
+function saveSGReading(idx){
+  const dateEl=document.getElementById('sg-edit-date-'+idx);
+  const valEl=document.getElementById('sg-edit-val-'+idx);
+  if(!dateEl||!valEl)return;
+  currentBatch.sgReadings[idx]={date:dateEl.value,val:valEl.value};
+  currentBatch.sgReadings.sort((a,b)=>a.date.localeCompare(b.date));
+  syncBatch();renderDetail();
+}
+
+function deleteSGReading(idx){
+  if(!confirm('Delete this SG reading?'))return;
+  currentBatch.sgReadings.splice(idx,1);
   syncBatch();renderDetail();
 }
 function tastingLogHTML(b){
@@ -1125,21 +1197,74 @@ function renderStats(){
 }
 
 /* ---- CSV EXPORT ---- */
+function exportJSON(){
+  const payload={
+    exportedAt:new Date().toISOString(),
+    version:2,
+    batches,
+    recipes
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='cider-log-backup-'+today()+'.json';a.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportCSV(){
-  const rows=[['Batch','Quantity','Start date','Juice/base','Campden','Pectic enzyme','Acid blend','Pre-ferm other','Yeast','Sugar type','Sugar qty','Initial nutrient','Pitch other','Starting SG','Latest SG','Est. ABV%','Status','Scheduled doses','Nutrient additions','Other ingredients','Notes']];
+  const rows=[['id','name','qty','startDate','status','juice','campden','pectic','acid','prefermOther','yeast','sugarType','sugarQty','initialNutrient','pitchOther','startingSG','estABV','sgReadings','nutrientSchedule','nutrientLog','ingredientLog','tastingLog','stageHistory','stageStartDates']];
   batches.forEach(b=>{
-    const readings=b.sgReadings||[];
-    const lastSG=readings.length?readings[readings.length-1].val:'';
-    const scheduled=(b.nutrientSchedule||[]).map(d=>`${d.date}: ${d.amount}${d.unit?' '+d.unit:''}${d.done?' (done)':''}`).join('; ');
-    const nutrients=(b.nutrientLog||[]).map(e=>`${e.date}: ${e.amount}${e.unit?' '+e.unit:''}`).join('; ');
-    const ingredients=(b.ingredientLog||[]).map(e=>`${e.date}: ${e.name}${e.qty?' '+e.qty+(e.unit?' '+e.unit:''):''}`).join('; ');
-    rows.push([b.name,b.qty||'',b.startDate||'',b.juice||'',b.campden||'',b.pectic||'',b.acid||'',b.prefermOther||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.initialNutrient||'',b.pitchOther||'',b.startingSG||'',lastSG,calcABV(b)||'',STATUS[b.status]?.label||b.status,scheduled,nutrients,ingredients,(b.notes||'').replace(/"/g,'""')]);
+    const sgR=JSON.stringify(b.sgReadings||[]);
+    const nutSched=JSON.stringify(b.nutrientSchedule||[]);
+    const nutLog=JSON.stringify(b.nutrientLog||[]);
+    const ingLog=JSON.stringify(b.ingredientLog||[]);
+    const tastLog=JSON.stringify(b.tastingLog||[]);
+    const stageHist=JSON.stringify(b.stageHistory||[]);
+    const stageDates=JSON.stringify(b.stageStartDates||{});
+    rows.push([b.id||'',b.name||'',b.qty||'',b.startDate||'',b.status||'',b.juice||'',b.campden||'',b.pectic||'',b.acid||'',b.prefermOther||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.initialNutrient||'',b.pitchOther||'',b.startingSG||'',calcABV(b)||'',sgR,nutSched,nutLog,ingLog,tastLog,stageHist,stageDates]);
   });
-  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='cider-log.csv';a.click();
+  const a=document.createElement('a');a.href=url;a.download='cider-log-'+today()+'.csv';a.click();
   URL.revokeObjectURL(url);
+}
+
+function triggerImport(){document.getElementById('import-file-input').click();}
+
+function handleImport(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const text=ev.target.result;
+      if(file.name.endsWith('.json')){
+        const data=JSON.parse(text);
+        if(!data.batches)throw new Error('Invalid backup file');
+        const incoming=data.batches||[];
+        const incomingRecipes=data.recipes||[];
+        const existingIds=new Set(batches.map(b=>b.id));
+        const existingRecipeIds=new Set(recipes.map(r=>r.id));
+        let added=0,skipped=0,addedR=0;
+        incoming.forEach(b=>{
+          if(!b.id||existingIds.has(b.id)){skipped++;return;}
+          batches.push(b);added++;
+        });
+        incomingRecipes.forEach(r=>{
+          if(!r.id||existingRecipeIds.has(r.id))return;
+          recipes.push(r);addedR++;
+        });
+        save();saveRecipes();renderBatches();renderRecipes();
+        alert(`Import complete: ${added} brew${added!==1?'s':''} added, ${skipped} skipped (already exist). ${addedR} recipe${addedR!==1?'s':''} added.`);
+      } else {
+        alert('Please use a .json backup file for import. CSV export is for data analysis only.');
+      }
+    } catch(err){
+      alert('Import failed: '+err.message);
+    }
+    e.target.value='';
+  };
+  reader.readAsText(file);
 }
 
 

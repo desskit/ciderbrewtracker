@@ -762,18 +762,20 @@ function toggleCollapse(id){
   if(!body||!arrow)return;
   const isOpen=!body.classList.contains('closed');
   if(isOpen){
-    // closing
+    // currently open → close it
     body.style.maxHeight=body.scrollHeight+'px';
     requestAnimationFrame(()=>{body.style.maxHeight='0';body.classList.add('closed');});
+    arrow.classList.remove('open');
   } else {
-    // opening
+    // currently closed → open it
     body.classList.remove('closed');
     body.style.maxHeight=body.scrollHeight+'px';
     setTimeout(()=>{body.style.maxHeight='none';},260);
+    arrow.classList.add('open');
   }
-  arrow.classList.toggle('open',isOpen);
+  // save the NEW state (opposite of what it was)
   const states=JSON.parse(localStorage.getItem('cider_collapse')||'{}');
-  states[id]=isOpen;
+  states[id]=!isOpen;
   localStorage.setItem('cider_collapse',JSON.stringify(states));
 }
 
@@ -792,7 +794,7 @@ function collapsibleSection(id, label, innerHTML){
       <div class="section-head" style="margin:0">${label}</div>
       <span class="collapsible-arrow${open?' open':''}" id="${id}-arrow">▼</span>
     </button>
-    <div class="collapsible-body${open?'':' closed'}" id="${id}-body" style="max-height:${open?'none':'0'}">
+    <div class="collapsible-body${open?'':' closed'}" id="${id}-body" style="max-height:${open?'none':'0px'}">
       ${innerHTML}
     </div>
   </div>`;

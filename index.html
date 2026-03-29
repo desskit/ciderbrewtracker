@@ -1196,8 +1196,8 @@ function doseBannersHTML(b){
   const overdue=sched.filter(d=>!d.done&&d.date<today());
   const dueToday=sched.filter(d=>!d.done&&d.date===today());
   let html='';
-  if(overdue.length)html+=`<div class="overdue-banner"><div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>${overdue.map(d=>`<div class="overdue-banner-item">• ${d.amount}${d.unit?' '+d.unit:''} — was due ${d.date}</div>`).join('')}</div>`;
-  if(dueToday.length)html+=`<div class="due-today-banner"><div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.amount}${d.unit?' '+d.unit:''}</div>`).join('')}</div>`;
+  if(overdue.length)html+=`<div class="overdue-banner"><div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>${overdue.map(d=>`<div class="overdue-banner-item">• ${d.name?d.name+' ':''} ${d.amount} — was due ${d.date}</div>`).join('')}</div>`;
+  if(dueToday.length)html+=`<div class="due-today-banner"><div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.name?d.name+' ':''} ${d.amount}</div>`).join('')}</div>`;
   return html;
 }
 
@@ -1248,7 +1248,7 @@ function nutrientSectionHTML(b){
         const st=doseStatus(d);
         const tagLabel={overdue:'Overdue',upcoming:'Upcoming','due-today':'Due today',done:'Done'}[st];
         return `<div class="sched-row ${st}">
-          <div class="sched-left"><div class="sched-main">${d.name?d.name+' — ':''}${d.amount}${d.unit?' '+d.unit:''}</div><div class="sched-date">${d.date}</div></div>
+          <div class="sched-left"><div class="sched-main">${d.name?d.name+' — ':''}${d.amount}</div><div class="sched-date">${d.date}</div></div>
           <div class="sched-actions">
             <span class="sched-tag ${st}">${tagLabel}</span>
             ${!d.done?`<button class="done-btn" onclick="markDoseDone(${i})">Done</button>`:''}
@@ -1258,25 +1258,23 @@ function nutrientSectionHTML(b){
       }).join('')
     : `<div class="log-empty">No doses scheduled yet.</div>`;
   const logRows=log.length
-    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name?e.name+' — ':''}${e.amount}${e.unit?' '+e.unit:''}</div><div class="log-sub">${e.date}</div></div><div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div></div>`).join('')
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name?e.name+' — ':''}${e.amount}</div><div class="log-sub">${e.date}</div></div><div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div></div>`).join('')
     : `<div class="log-empty">No doses logged yet.</div>`;
   const overdueCount=sched.filter(d=>!d.done&&d.date<=today()).length;
   const badge=overdueCount?` <span style="background:#F09595;color:#501313;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:6px">${overdueCount} due</span>`:'';
   const inner=`<p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Schedule upcoming doses — tap Done when added.</p>
   <div class="log-add" style="flex-wrap:wrap">
     <input class="date-inp" id="sched-date" type="date" value="${today()}" />
-    <input id="sched-name" placeholder="Nutrient name (e.g. Fermaid-O)" style="flex:2;min-width:140px"/>
-    <input id="sched-amt" placeholder="Amount" style="width:80px;flex:none"/>
-    <input class="unit-inp" id="sched-unit" placeholder="Unit" />
+    <input id="sched-name" placeholder="Nutrient (e.g. Fermaid-O)" style="flex:2;min-width:120px"/>
+    <input id="sched-amt" placeholder="Amount (e.g. 2g, 1/4 tsp)" style="flex:2;min-width:120px"/>
     <button class="wide" onclick="addScheduledDose()">+ Schedule</button>
   </div>
   <div class="log-list" style="margin-bottom:1rem">${schedRows}</div>
   <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>Additions log</div>
   <div class="log-add" style="flex-wrap:wrap">
     <input class="date-inp" id="nut-date" type="date" value="${today()}" />
-    <input id="nut-name" placeholder="Nutrient name (e.g. Fermaid-K)" style="flex:2;min-width:140px"/>
-    <input id="nut-amt" placeholder="Amount" style="width:80px;flex:none"/>
-    <input class="unit-inp" id="nut-unit" placeholder="Unit" />
+    <input id="nut-name" placeholder="Nutrient (e.g. Fermaid-K)" style="flex:2;min-width:120px"/>
+    <input id="nut-amt" placeholder="Amount (e.g. 2g, 1/4 tsp)" style="flex:2;min-width:120px"/>
     <button class="wide" onclick="addNutrient()">+ Log</button>
   </div>
   <div class="log-list">${logRows}</div>`;
@@ -1428,10 +1426,9 @@ function addScheduledDose(){
   const date=document.getElementById('sched-date').value||today();
   const name=document.getElementById('sched-name')?.value.trim()||'';
   const amount=document.getElementById('sched-amt').value.trim();
-  const unit=document.getElementById('sched-unit').value.trim();
   if(!amount)return;
   currentBatch.nutrientSchedule=currentBatch.nutrientSchedule||[];
-  currentBatch.nutrientSchedule.push({date,name,amount,unit,done:false});
+  currentBatch.nutrientSchedule.push({date,name,amount,done:false});
   currentBatch.nutrientSchedule.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();renderBatches();
 }
@@ -1439,7 +1436,7 @@ function markDoseDone(idx){
   currentBatch.nutrientSchedule[idx].done=true;
   const d=currentBatch.nutrientSchedule[idx];
   currentBatch.nutrientLog=currentBatch.nutrientLog||[];
-  currentBatch.nutrientLog.push({date:today(),name:d.name||'',amount:d.amount,unit:d.unit});
+  currentBatch.nutrientLog.push({date:today(),name:d.name||'',amount:d.amount});
   currentBatch.nutrientLog.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();renderBatches();
 }
@@ -1448,10 +1445,9 @@ function addNutrient(){
   const date=document.getElementById('nut-date').value||today();
   const name=document.getElementById('nut-name')?.value.trim()||'';
   const amount=document.getElementById('nut-amt').value.trim();
-  const unit=document.getElementById('nut-unit').value.trim();
   if(!amount)return;
   currentBatch.nutrientLog=currentBatch.nutrientLog||[];
-  currentBatch.nutrientLog.push({date,name,amount,unit});
+  currentBatch.nutrientLog.push({date,name,amount});
   currentBatch.nutrientLog.sort((a,b)=>a.date.localeCompare(b.date));
   syncBatch();renderDetail();
 }

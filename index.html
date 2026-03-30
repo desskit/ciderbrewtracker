@@ -18,6 +18,7 @@
       --green: #1D9E75;
       --text: #1a1a1a; --text-muted: #666; --border: rgba(0,0,0,0.12);
       --surface: #fff; --bg: #f5f0eb;
+      --border-radius-md: 8px; --border-radius-lg: 12px;
     }
     [data-theme="dark"] {
       --text: #f0ead8; --text-muted: #a89880; --border: rgba(255,255,255,0.1);
@@ -36,6 +37,12 @@
     [data-theme="dark"] .stage-timer.s-primary { background: #0d2b20; border-color: #1D9E75; }
     [data-theme="dark"] .stage-timer.s-secondary { background: #2a1a00; border-color: #EF9F27; }
     [data-theme="dark"] .chart-wrap { background: #221810; }
+    [data-theme="dark"] .sp-primary { background: #0d2b20; color: #5DCAA5; }
+    [data-theme="dark"] .sp-secondary { background: #2a1a00; color: #FAC775; }
+    [data-theme="dark"] .sp-bottled { background: #2a2520; color: #B4B2A9; }
+    [data-theme="dark"] .abv-pill { background: #0d2b20; color: #5DCAA5; }
+    [data-theme="dark"] .overdue-badge { background: #2d0f0f; color: #F09595; border-color: #6b2020; }
+    [data-theme="dark"] .due-today-badge { background: #2a1a00; color: #FAC775; border-color: #633806; }
     [data-theme="dark"] .overdue-banner { background: #2d0f0f; border-color: #c0392b; }
     [data-theme="dark"] .due-today-banner { background: #2a1a00; border-color: #EF9F27; }
     [data-theme="dark"] body { background-image: none; }
@@ -690,6 +697,8 @@
 let batches=[], currentBatch=null, sgChart=null, statsChart=null, activeFilter='all';
 let recipes=[], currentRecipe=null, editingRecipeId=null;
 
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
 const STATUS={
   primary:{label:'Primary fermentation',short:'Primary',cls:'sp-primary',cardCls:'',optCls:'s-primary',timerCls:'s-primary'},
   secondary:{label:'Secondary / aging',short:'Secondary',cls:'sp-secondary',cardCls:'status-secondary',optCls:'s-secondary',timerCls:'s-secondary'},
@@ -704,7 +713,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -753,6 +762,17 @@ function fmtDate(isoStr){
 
 function curr(val){
   return (prefs.currency||'$')+parseFloat(val).toFixed(2);
+}
+
+function parseQtyLitres(qtyStr){
+  if(!qtyStr)return null;
+  const s=String(qtyStr).trim().toLowerCase();
+  const num=parseFloat(s);
+  if(isNaN(num)||num<=0)return null;
+  if(/gal/i.test(s)||/\bg\b/i.test(s))return num*3.78541;
+  if(/lit|ltr|\bl\b/i.test(s))return num;
+  // fall back to volume preference
+  return (prefs.volume||'gal')==='gal'?num*3.78541:num;
 }
 
 /* ---- COLLAPSIBLE SECTIONS ---- */
@@ -806,14 +826,14 @@ function tempLogHTML(b){
   const unit=prefs.temp||'F';
   const rows=log.length
     ? log.map((e,i)=>`<div class="log-row">
-        <div><div class="log-main">${e.temp}°${e.unit||unit}${e.location?' — '+e.location:''}</div><div class="log-sub">${e.date}</div></div>
+        <div><div class="log-main">${esc(e.temp)}°${e.unit||unit}${e.location?' — '+esc(e.location):''}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
         <div class="log-right"><button class="log-del" onclick="deleteTemp(${i})">×</button></div>
       </div>`).join('')
     : `<div class="log-empty">No temperature readings yet.</div>`;
   const inner=`<div class="log-add" style="flex-wrap:wrap">
     <input class="date-inp" id="temp-date" type="date" value="${today()}" />
     <input id="temp-val" type="number" step="0.1" placeholder="e.g. 68" style="width:90px;flex:none"/>
-    <select id="temp-unit" style="width:70px;flex:none"><option value="F">°F</option><option value="C">°C</option></select>
+    <select id="temp-unit" style="width:70px;flex:none"><option value="F"${(prefs.temp||'F')==='F'?' selected':''}>°F</option><option value="C"${(prefs.temp||'F')==='C'?' selected':''}>°C</option></select>
     <input id="temp-loc" placeholder="Location (optional)" style="flex:1;min-width:100px"/>
     <button class="wide" onclick="addTemp()">+ Add reading</button>
   </div>
@@ -843,7 +863,7 @@ function phLogHTML(b){
   const log=(b.phLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const rows=log.length
     ? log.map((e,i)=>`<div class="log-row">
-        <div><div class="log-main">pH ${e.ph}${e.note?' — '+e.note:''}</div><div class="log-sub">${e.date}</div></div>
+        <div><div class="log-main">pH ${esc(e.ph)}${e.note?' — '+esc(e.note):''}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
         <div class="log-right"><button class="log-del" onclick="deletePH(${i})">×</button></div>
       </div>`).join('')
     : `<div class="log-empty">No pH readings yet.</div>`;
@@ -954,6 +974,7 @@ function showTab(t){
   ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare','settings'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
   const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare',settings:'__none__'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
+  window.scrollTo(0,0);
   if(t==='stats')renderStats();
   if(t==='add')document.getElementById('f-date').value=today();
   if(t==='recipes')renderRecipes();
@@ -1005,12 +1026,12 @@ function renderBatches(){
     const cardAccent=b.status==='bottled'?'rgba(180,178,169,0.06)':b.status==='secondary'?'rgba(239,159,39,0.06)':'rgba(29,158,117,0.06)';
     return `<div class="batch-card ${st.cardCls} brew-card-grad" data-accent="${cardAccent}" onclick="showDetail('${b.id}')">
       <div class="batch-row">
-        <span class="batch-name">${b.name}</span>
+        <span class="batch-name">${esc(b.name)}</span>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
       </div>
-      <div class="batch-date">${b.startDate||'No date'} · ${b.qty||'—'}${dayStr?' · '+dayStr:''}</div>
+      <div class="batch-date">${fmtDate(b.startDate)||'No date'} · ${esc(b.qty)||'—'}${dayStr?' · '+dayStr:''}</div>
       <div class="meta-row">
-        ${b.yeast?`<span class="meta">Yeast: <b>${b.yeast}</b></span>`:''}
+        ${b.yeast?`<span class="meta">Yeast: <b>${esc(b.yeast)}</b></span>`:''}
         <span class="meta">SG: <b>${lastSG}</b></span>
         ${abv?`<span class="abv-pill">~${abv}% ABV</span>`:''}
       </div>
@@ -1155,7 +1176,7 @@ function stageTimerHTML(b){
       <div class="stage-timer-label">Time in stage</div>
       <div class="stage-timer-name">${st.label}</div>
       <div class="stage-date-row">
-        <span class="stage-timer-since">${stageDate?'since '+stageDate:'no date set'}</span>
+        <span class="stage-timer-since">${stageDate?'since '+fmtDate(stageDate):'no date set'}</span>
         <button class="stage-date-edit-btn" onclick="editStageDate()">Edit</button>
       </div>
     </div>
@@ -1198,8 +1219,8 @@ function doseBannersHTML(b){
   const overdue=sched.filter(d=>!d.done&&d.date<today());
   const dueToday=sched.filter(d=>!d.done&&d.date===today());
   let html='';
-  if(overdue.length)html+=`<div class="overdue-banner"><div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>${overdue.map(d=>`<div class="overdue-banner-item">• ${d.name?d.name+' ':''} ${d.amount} — was due ${d.date}</div>`).join('')}</div>`;
-  if(dueToday.length)html+=`<div class="due-today-banner"><div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.name?d.name+' ':''} ${d.amount}</div>`).join('')}</div>`;
+  if(overdue.length)html+=`<div class="overdue-banner"><div class="overdue-banner-title">Nutrient dose${overdue.length>1?'s':''} overdue</div>${overdue.map(d=>`<div class="overdue-banner-item">• ${d.name?esc(d.name)+' ':''} ${esc(d.amount)} — was due ${fmtDate(d.date)}</div>`).join('')}</div>`;
+  if(dueToday.length)html+=`<div class="due-today-banner"><div class="due-today-banner-title">Nutrient dose${dueToday.length>1?'s':''} due today</div>${dueToday.map(d=>`<div class="due-today-banner-item">• ${d.name?esc(d.name)+' ':''} ${esc(d.amount)}</div>`).join('')}</div>`;
   return html;
 }
 
@@ -1226,15 +1247,15 @@ function ingredientsDisplayHTML(b){
     html+=`<div class="ing-section">`;
     if(base.length){
       html+=`<div class="ing-section-head">Base</div>`;
-      html+=base.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+      html+=base.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${esc(i.val)}</span></div>`).join('');
     }
     if(preferm.length){
       html+=`<div class="ing-section-head">Pre-fermentation</div>`;
-      html+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+      html+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${esc(i.val)}</span></div>`).join('');
     }
     if(atpitch.length){
       html+=`<div class="ing-section-head">At pitch</div>`;
-      html+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');
+      html+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${esc(i.val)}</span></div>`).join('');
     }
     html+=`</div>`;
   }
@@ -1250,7 +1271,7 @@ function nutrientSectionHTML(b){
         const st=doseStatus(d);
         const tagLabel={overdue:'Overdue',upcoming:'Upcoming','due-today':'Due today',done:'Done'}[st];
         return `<div class="sched-row ${st}">
-          <div class="sched-left"><div class="sched-main">${d.name?d.name+' — ':''}${d.amount}</div><div class="sched-date">${d.date}</div></div>
+          <div class="sched-left"><div class="sched-main">${d.name?esc(d.name)+' — ':''}${esc(d.amount)}</div><div class="sched-date">${fmtDate(d.date)}</div></div>
           <div class="sched-actions">
             <span class="sched-tag ${st}">${tagLabel}</span>
             ${!d.done?`<button class="done-btn" onclick="markDoseDone(${i})">Done</button>`:''}
@@ -1260,7 +1281,7 @@ function nutrientSectionHTML(b){
       }).join('')
     : `<div class="log-empty">No doses scheduled yet.</div>`;
   const logRows=log.length
-    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name?e.name+' — ':''}${e.amount}</div><div class="log-sub">${e.date}</div></div><div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div></div>`).join('')
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name?esc(e.name)+' — ':''}${esc(e.amount)}</div><div class="log-sub">${fmtDate(e.date)}</div></div><div class="log-right"><button class="log-del" onclick="deleteNutrient(${arr.length-1-i})">×</button></div></div>`).join('')
     : `<div class="log-empty">No doses logged yet.</div>`;
   const overdueCount=sched.filter(d=>!d.done&&d.date<=today()).length;
   const badge=overdueCount?` <span style="background:#F09595;color:#501313;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:6px">${overdueCount} due</span>`:'';
@@ -1287,7 +1308,7 @@ function nutrientSectionHTML(b){
 function ingredientLogHTML(b){
   const log=(b.ingredientLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const rows=log.length
-    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${e.name}${e.qty?' — '+e.qty+(e.unit?' '+e.unit:''):''}</div><div class="log-sub">${e.date}${e.note?' · '+e.note:''}</div></div><div class="log-right"><button class="log-del" onclick="deleteIngredient(${arr.length-1-i})">×</button></div></div>`).join('')
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row"><div><div class="log-main">${esc(e.name)}${e.qty?' — '+esc(e.qty)+(e.unit?' '+esc(e.unit):''):''}</div><div class="log-sub">${fmtDate(e.date)}${e.note?' · '+esc(e.note):''}</div></div><div class="log-right"><button class="log-del" onclick="deleteIngredient(${arr.length-1-i})">×</button></div></div>`).join('')
     : `<div class="log-empty">No additions logged yet.</div>`;
   const inner=`<div class="log-add">
     <input class="date-inp" id="ing-date" type="date" value="${today()}" />
@@ -1311,7 +1332,7 @@ function stageHistoryHTML(b){
   if(!rows.length)return'';
   const rowsHTML=rows.map(r=>{
     const st=STATUS[r.stage]||STATUS.primary;
-    const dateRange=r.startDate?(r.endDate?r.startDate+' → '+r.endDate:r.startDate+' → now'):'—';
+    const dateRange=r.startDate?(r.endDate?fmtDate(r.startDate)+' → '+fmtDate(r.endDate):fmtDate(r.startDate)+' → now'):'—';
     const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
     const ts=r.recordedAt?`<div class="sh-ts">recorded ${r.recordedAt}</div>`:'';
     const editBtns=r.histIdx>=0?`<div style="display:flex;gap:4px;margin-left:8px"><button class="log-del" style="font-size:12px;color:#BA7517" onclick="editStageHistoryEntry(${r.histIdx})">✎</button><button class="log-del" onclick="deleteStageHistoryEntry(${r.histIdx})">×</button></div>`:'';
@@ -1363,8 +1384,8 @@ function renderDetail(){
   document.getElementById('detail-content').innerHTML=`
     <div class="detail-header">
       <div class="detail-header-left">
-        <div class="detail-title">${b.name}</div>
-        <div class="detail-sub">Started ${b.startDate||'—'} · ${b.qty||'—'}</div>
+        <div class="detail-title">${esc(b.name)}</div>
+        <div class="detail-sub">Started ${fmtDate(b.startDate)||'—'} · ${esc(b.qty)||'—'}</div>
       </div>
       <button id="edit-details-btn" class="edit-details-btn" onclick="showEditDetails()">Edit details</button>
     </div>
@@ -1405,7 +1426,7 @@ function renderDetail(){
       ${readings.length?readings.map((r,i,arr)=>{
         const prev=arr[i-1];let trend='';
         if(prev){const diff=parseFloat(r.val)-parseFloat(prev.val);trend=diff<-0.001?'<span class="sg-trend down">fermenting</span>':'<span class="sg-trend same">stable</span>';}
-        return `<div class="log-row" id="sg-row-${i}"><div class="log-sub" style="font-size:14px">${r.date}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600">${r.val}</span>${trend}<button class="log-del" style="font-size:12px;color:#BA7517" onclick="editSGReading(${i})">✎</button><button class="log-del" onclick="deleteSGReading(${i})">×</button></div></div>`;
+        return `<div class="log-row" id="sg-row-${i}"><div class="log-sub" style="font-size:14px">${fmtDate(r.date)}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600">${r.val}</span>${trend}<button class="log-del" style="font-size:12px;color:#BA7517" onclick="editSGReading(${i})">✎</button><button class="log-del" onclick="deleteSGReading(${i})">×</button></div></div>`;
       }).join(''):`<div class="log-empty">No readings yet.</div>`}
     </div>
 
@@ -1509,7 +1530,7 @@ function tastingLogHTML(b){
   const log=(b.tastingLog||[]);
   const rows=log.length
     ? log.map((e,i)=>`<div class="log-row">
-        <div style="flex:1"><div class="log-main" style="font-weight:400;font-size:14px">${e.note}</div><div class="log-sub">${e.date}</div></div>
+        <div style="flex:1"><div class="log-main" style="font-weight:400;font-size:14px">${esc(e.note)}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
         <div class="log-right"><button class="log-del" onclick="deleteTastingNote(${i})">x</button></div>
       </div>`).join('')
     : `<div class="log-empty">No notes yet.</div>`;
@@ -1587,9 +1608,9 @@ function renderStats(){
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${brewIcon}Total brews</div><div class="stat-val">${batches.length}</div></div>
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${activeIcon}In progress</div><div class="stat-val">${active}</div></div>
     <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${abvIcon}Avg ABV</div><div class="stat-val">${avgABV}<span class="stat-unit">%</span></div></div>
-    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${yeastIcon}Top yeast</div><div class="stat-val" style="font-size:13px">${topYeast?topYeast[0]:'—'}</div></div>
-    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${trophyIcon}Highest ABV</div><div class="stat-val">${highestABV||'—'}${highestABV?'<span class="stat-unit">%</span>':''}</div>${highestABVBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${highestABVBatch.name}</div>`:''}</div>
-    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${calIcon}Longest batch</div><div class="stat-val">${maxAge!==null?maxAge:'—'}${maxAge!==null?'<span class="stat-unit">d</span>':''}</div>${longestBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${longestBatch.name}</div>`:''}</div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${yeastIcon}Top yeast</div><div class="stat-val" style="font-size:13px">${topYeast?esc(topYeast[0]):'—'}</div></div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${trophyIcon}Highest ABV</div><div class="stat-val">${highestABV||'—'}${highestABV?'<span class="stat-unit">%</span>':''}</div>${highestABVBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${esc(highestABVBatch.name)}</div>`:''}</div>
+    <div class="stat-card"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${calIcon}Longest batch</div><div class="stat-val">${maxAge!==null?maxAge:'—'}${maxAge!==null?'<span class="stat-unit">d</span>':''}</div>${longestBatch?`<div style="font-size:11px;color:#BA7517;margin-top:2px">${esc(longestBatch.name)}</div>`:''}</div>
     <div class="stat-card" style="grid-column:span 2"><div class="stat-label" style="display:flex;align-items:center;gap:5px">${clockIcon}Avg batch age</div><div class="stat-val">${avgAge!==null?avgAge:'—'}${avgAge!==null?'<span class="stat-unit"> days</span>':''}</div></div>
   `;
 
@@ -1705,11 +1726,12 @@ function costTrackerHTML(b){
   const total=log.reduce((s,e)=>s+parseFloat(e.cost||0),0);
   const count=parseFloat(b.bottleCount||0);
   const cpp=count&&total?(total/count).toFixed(2):null;
-  const cpl=parseFloat(b.qty)>0?(total/parseFloat(b.qty)).toFixed(2):null;
+  const litres=parseQtyLitres(b.qty);
+  const cpl=litres&&total?(total/litres).toFixed(2):null;
   const rows=log.length
     ? log.map((e,i)=>`<div class="log-row">
-        <div><div class="log-main">${e.item}</div><div class="log-sub">${e.date}</div></div>
-        <div class="log-right"><span style="font-weight:600;color:#412402">$${parseFloat(e.cost).toFixed(2)}</span>
+        <div><div class="log-main">${esc(e.item)}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
+        <div class="log-right"><span style="font-weight:600;color:var(--text)">${curr(e.cost)}</span>
           <button class="log-del" onclick="deleteCost(${i})">×</button></div>
       </div>`).join('')
     : `<div class="log-empty">No costs logged yet.</div>`;
@@ -1717,14 +1739,14 @@ function costTrackerHTML(b){
   <div class="log-add" style="flex-wrap:wrap">
     <input class="date-inp" id="cost-date" type="date" value="${today()}" />
     <input id="cost-item" placeholder="Item (e.g. apple juice)" style="flex:2;min-width:120px"/>
-    <input id="cost-val" type="number" step="0.01" min="0" placeholder="$0.00" style="width:80px;flex:none"/>
+    <input id="cost-val" type="number" step="0.01" min="0" placeholder="${(prefs.currency||'$')}0.00" style="width:80px;flex:none"/>
     <button class="wide" onclick="addCost()">+ Add cost</button>
   </div>
   <div class="log-list">${rows}</div>
   ${total>0?`<div style="background:#FAEEDA;border-radius:var(--border-radius-md);padding:10px 14px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:1.25rem">
-    <span style="font-size:13px;color:#854F0B">Total: <b style="font-size:16px;color:#412402">$${total.toFixed(2)}</b></span>
-    ${cpp?`<span style="font-size:13px;color:#854F0B">Per bottle: <b style="color:#412402">$${cpp}</b></span>`:''}
-    ${cpl?`<span style="font-size:13px;color:#854F0B">Per litre: <b style="color:#412402">$${cpl}</b></span>`:''}
+    <span style="font-size:13px;color:#854F0B">Total: <b style="font-size:16px;color:#412402">${curr(total)}</b></span>
+    ${cpp?`<span style="font-size:13px;color:#854F0B">Per bottle: <b style="color:#412402">${curr(cpp)}</b></span>`:''}
+    ${cpl?`<span style="font-size:13px;color:#854F0B">Per litre: <b style="color:#412402">${curr(cpl)}</b></span>`:''}
   </div>`:''}`;
 }
 
@@ -1754,7 +1776,7 @@ function initCompare(){
     sel.innerHTML='<option value="">— pick a brew —</option>';
     batches.forEach(b=>{
       const o=document.createElement('option');
-      o.value=b.id;o.textContent=b.name+(b.startDate?' ('+b.startDate+')':'');
+      o.value=b.id;o.textContent=b.name+(b.startDate?' ('+fmtDate(b.startDate)+')':'');
       if(b.id===cur)o.selected=true;
       sel.appendChild(o);
     });
@@ -1785,20 +1807,20 @@ function renderComparison(){
     const highlight=vA&&vB&&vA!==vB;
     return `<tr>
       <td style="font-size:12px;color:var(--text-muted);padding:8px 0;border-bottom:0.5px solid var(--border);white-space:nowrap">${label}</td>
-      <td style="font-size:13px;font-weight:600;padding:8px 8px;border-bottom:0.5px solid var(--border);text-align:center">${vA||'—'}</td>
-      <td style="font-size:13px;font-weight:600;padding:8px 0;border-bottom:0.5px solid var(--border);text-align:center">${vB||'—'}</td>
+      <td style="font-size:13px;font-weight:600;padding:8px 8px;border-bottom:0.5px solid var(--border);text-align:center">${esc(vA)||'—'}</td>
+      <td style="font-size:13px;font-weight:600;padding:8px 0;border-bottom:0.5px solid var(--border);text-align:center">${esc(vB)||'—'}</td>
     </tr>`;
   }
 
   el.innerHTML=`
     <div style="display:grid;grid-template-columns:auto 1fr 1fr;margin-bottom:1rem">
       <div></div>
-      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#FAEEDA;border-radius:8px 0 0 0;color:#412402">${a.name}</div>
-      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#E1F5EE;border-radius:0 8px 0 0;color:#085041">${b.name}</div>
+      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#FAEEDA;border-radius:8px 0 0 0;color:#412402">${esc(a.name)}</div>
+      <div style="text-align:center;font-size:13px;font-weight:700;padding:8px;background:#E1F5EE;border-radius:0 8px 0 0;color:#085041">${esc(b.name)}</div>
     </div>
     <div style="background:var(--surface);border-radius:var(--border-radius-lg);border:0.5px solid var(--border);padding:0 12px;margin-bottom:1.25rem;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
-        ${row('Start date',a.startDate,b.startDate)}
+        ${row('Start date',fmtDate(a.startDate),fmtDate(b.startDate))}
         ${row('Quantity',a.qty,b.qty)}
         ${row('Yeast',a.yeast,b.yeast)}
         ${row('Sugar',a.sugarType?(a.sugarType+(a.sugarQty?' '+a.sugarQty:'')):null,b.sugarType?(b.sugarType+(b.sugarQty?' '+b.sugarQty:'')):null)}
@@ -1954,14 +1976,14 @@ function renderRecipes(){
   el.innerHTML=recipes.map(r=>`
     <div class="batch-card recipe-card-style" style="border-left-color:#7F77DD" onclick="showRecipeDetail('${r.id}')">
       <div class="batch-row">
-        <span class="batch-name">${r.name}</span>
+        <span class="batch-name">${esc(r.name)}</span>
         <span class="status-pill" style="background:#EEEDFE;color:#3C3489">${scrollIcon}Recipe</span>
       </div>
-      ${r.juice?`<div class="batch-date">${r.juice}</div>`:''}
+      ${r.juice?`<div class="batch-date">${esc(r.juice)}</div>`:''}
       <div class="meta-row">
-        ${r.yeast?`<span class="meta">Yeast: <b>${r.yeast}</b></span>`:''}
-        ${r.sugarType?`<span class="meta">Sugar: <b>${r.sugarType}</b></span>`:''}
-        ${r.notes?`<span class="meta" style="font-style:italic;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${r.notes}</span>`:''}
+        ${r.yeast?`<span class="meta">Yeast: <b>${esc(r.yeast)}</b></span>`:''}
+        ${r.sugarType?`<span class="meta">Sugar: <b>${esc(r.sugarType)}</b></span>`:''}
+        ${r.notes?`<span class="meta" style="font-style:italic;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(r.notes)}</span>`:''}
       </div>
     </div>`).join('');
 }
@@ -1990,16 +2012,16 @@ function renderRecipeDetail(){
   ].filter(i=>i.val);
 
   let ingHTML='<div class="ing-section">';
-  if(r.juice) ingHTML+=`<div class="ing-section-head">Base</div><div class="ing-row"><span class="ing-name">Apple juice / base</span><span class="ing-val">${r.juice}</span></div>`;
-  if(preferm.length){ingHTML+=`<div class="ing-section-head">Pre-fermentation</div>`;ingHTML+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');}
-  if(atpitch.length){ingHTML+=`<div class="ing-section-head">At pitch</div>`;ingHTML+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${i.val}</span></div>`).join('');}
+  if(r.juice) ingHTML+=`<div class="ing-section-head">Base</div><div class="ing-row"><span class="ing-name">Apple juice / base</span><span class="ing-val">${esc(r.juice)}</span></div>`;
+  if(preferm.length){ingHTML+=`<div class="ing-section-head">Pre-fermentation</div>`;ingHTML+=preferm.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${esc(i.val)}</span></div>`).join('');}
+  if(atpitch.length){ingHTML+=`<div class="ing-section-head">At pitch</div>`;ingHTML+=atpitch.map(i=>`<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-val">${esc(i.val)}</span></div>`).join('');}
   ingHTML+='</div>';
 
   document.getElementById('recipe-detail-content').innerHTML=`
     <div class="detail-header">
       <div class="detail-header-left">
-        <div class="detail-title">${r.name}</div>
-        ${r.notes?`<div class="detail-sub" style="margin-top:4px;font-style:italic">${r.notes}</div>`:''}
+        <div class="detail-title">${esc(r.name)}</div>
+        ${r.notes?`<div class="detail-sub" style="margin-top:4px;font-style:italic">${esc(r.notes)}</div>`:''}
       </div>
       <button class="edit-details-btn" onclick="openEditRecipe('${r.id}')">Edit</button>
     </div>

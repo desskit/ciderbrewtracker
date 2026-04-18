@@ -563,7 +563,7 @@
       <div class="form-group"><label class="form-label">Initial notes</label><textarea id="f-notes" placeholder="Observations, aroma, colour..."></textarea></div>
     </div>
     <button class="btn-primary" onclick="saveBatch()">Save brew</button>
-    <button class="btn-secondary" onclick="showTab('batches')">Cancel</button>
+    <button class="btn-secondary" onclick="goBack()">Cancel</button>
   </div>
 
   <!-- STATS -->
@@ -583,7 +583,7 @@
 
   <!-- DETAIL -->
   <div id="sec-detail" class="section body-pad">
-    <button class="back-btn" onclick="showTab('batches')">← All brews</button>
+    <button class="back-btn" onclick="goBack()">← All brews</button>
     <div id="detail-content"></div>
   </div>
 
@@ -595,7 +595,7 @@
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <span style="font-size:13px;color:var(--text-muted)" id="recipe-count">0 recipes</span>
-      <button class="edit-details-btn" style="background:#EEEDFE;color:#3C3489;border-color:#AFA9EC" onclick="showTab('recipe-add')">+ New recipe</button>
+      <button class="edit-details-btn" style="background:#EEEDFE;color:#3C3489;border-color:#AFA9EC" onclick="showRecipeForm(null)">+ New recipe</button>
     </div>
     <div id="recipe-list"></div>
   </div>
@@ -640,7 +640,7 @@
 
   <!-- RECIPE DETAIL -->
   <div id="sec-recipe-detail" class="section body-pad">
-    <button class="back-btn" onclick="showTab('recipes')">← Recipes</button>
+    <button class="back-btn" onclick="goBack()">← Recipes</button>
     <div id="recipe-detail-content"></div>
   </div>
 
@@ -774,7 +774,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -1029,29 +1029,114 @@ function setFilter(f){
   renderBatches();
 }
 
-function showTab(t){
+/* ---- HISTORY / ANDROID BACK BUTTON ---- */
+// Each history state is {view, batchId?, recipeId?, editingRecipeId?, editPanel?}
+// 'batches' is home — it's the baseline state (replaceState). Every other
+// view pushes a new state. popstate restores prior view without pushing more.
+let navInProgress = false; // guards against popstate reentry
+
+function navigate(state, opts){
+  const replace = opts && opts.replace;
+  if(navInProgress) return;
+  if(replace) history.replaceState(state, '');
+  else history.pushState(state, '');
+  applyState(state);
+}
+
+function applyState(state){
+  // Silently render the given view. Does NOT touch history.
+  navInProgress = true;
+  try {
+    const v = state && state.view || 'batches';
+    if(v === 'detail' && state.batchId){
+      const b = batches.find(x => x.id === state.batchId);
+      if(b){
+        currentBatch = b;
+        renderDetail();
+        showSectionOnly('detail');
+        // If this state has an open edit panel, restore it after detail renders
+        if(state.editPanel) renderEditDetailsPanel();
+        else hideEditDetailsPanel();
+      } else {
+        // Batch was deleted — fall back to batches list
+        showSectionOnly('batches');
+      }
+    } else if(v === 'recipe-detail' && state.recipeId){
+      const r = recipes.find(x => x.id === state.recipeId);
+      if(r){
+        currentRecipe = r;
+        renderRecipeDetail();
+        showSectionOnly('recipe-detail');
+      } else {
+        showSectionOnly('recipes');
+      }
+    } else if(v === 'recipe-add'){
+      // Restore form state if we were editing a recipe
+      if(state.editingRecipeId){
+        const r = recipes.find(x => x.id === state.editingRecipeId);
+        if(r) fillRecipeForm(r);
+      } else {
+        fillRecipeForm(null);
+      }
+      showSectionOnly('recipe-add');
+    } else {
+      showSectionOnly(v);
+    }
+  } finally {
+    navInProgress = false;
+  }
+}
+
+function showSectionOnly(t){
+  // Render-only version of showTab that doesn't push history.
   ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare','settings'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
   const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare',settings:'__none__'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
-  // Hide hero on deep detail views (recipe-add/recipe-detail) to give brew name prominence
   const hideHeroOn = ['detail','recipe-detail','recipe-add'];
   document.querySelector('.app').classList.toggle('hero-hidden', hideHeroOn.includes(t));
   window.scrollTo(0,0);
   if(t==='stats')renderStats();
-  if(t==='add')document.getElementById('f-date').value=today();
+  if(t==='add'){const el=document.getElementById('f-date');if(el&&!el.value)el.value=today();}
   if(t==='recipes')renderRecipes();
   if(t==='compare')initCompare();
   if(t==='settings'){updateDarkToggleUI();applyPrefs();}
 }
 
+window.addEventListener('popstate', e => {
+  // Android back / browser back — restore the prior state
+  applyState(e.state || {view:'batches'});
+});
+
+function showTab(t){
+  const cur = history.state && history.state.view;
+  // 'batches' is the home tab — replace rather than push, so it doesn't
+  // accumulate back-stack entries.
+  if(t === 'batches'){
+    navigate({view:'batches'}, {replace:true});
+    return;
+  }
+  // If we're already on this tab, no-op (avoid duplicate history entries)
+  if(cur === t) return;
+  navigate({view:t});
+}
+
+function goBack(){
+  // Prefer the browser's back — keeps SPA history in sync with hardware back.
+  // If there's nothing to go back to (e.g. PWA just opened on this page),
+  // fall back to home.
+  const cur = history.state && history.state.view;
+  if(cur && cur !== 'batches'){
+    history.back();
+  } else {
+    navigate({view:'batches'}, {replace:true});
+  }
+}
+
 function showDetail(id){
-  currentBatch=batches.find(b=>b.id===id);
-  if(!currentBatch)return;
-  renderDetail();
-  ['batches','add','stats'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
-  document.getElementById('sec-detail').classList.add('visible');
-  document.querySelector('.app').classList.add('hero-hidden');
-  window.scrollTo(0,0);
+  const b=batches.find(x=>x.id===id);
+  if(!b)return;
+  currentBatch=b;
+  navigate({view:'detail', batchId:id});
 }
 
 function calcABV(b){
@@ -1152,10 +1237,10 @@ function setStatus(s){
 }
 
 /* ---- EDIT DETAILS ---- */
-function showEditDetails(){
+function renderEditDetailsPanel(){
   const b=currentBatch;
   const el=document.getElementById('edit-details-panel');
-  if(!el)return;
+  if(!el||!b)return;
   el.innerHTML=`
     <div class="form-wrap" style="margin-top:1rem">
       <div class="form-section-label">Brew info</div>
@@ -1195,15 +1280,33 @@ function showEditDetails(){
     <button class="btn-secondary" onclick="cancelEditDetails()">Cancel</button>
   `;
   el.style.display='block';
-  document.getElementById('edit-details-btn').style.display='none';
-  document.getElementById('ingredients-display').style.display='none';
+  const btn=document.getElementById('edit-details-btn');if(btn)btn.style.display='none';
+  const disp=document.getElementById('ingredients-display');if(disp)disp.style.display='none';
+}
+
+function hideEditDetailsPanel(){
+  const el=document.getElementById('edit-details-panel');
+  if(el)el.style.display='none';
+  const btn=document.getElementById('edit-details-btn');if(btn)btn.style.display='';
+  const disp=document.getElementById('ingredients-display');if(disp)disp.style.display='';
+}
+
+function showEditDetails(){
+  if(!currentBatch)return;
+  renderEditDetailsPanel();
+  // Push a history entry so Android back closes the panel first
+  navigate({view:'detail', batchId: currentBatch.id, editPanel: true});
 }
 
 function cancelEditDetails(){
-  const el=document.getElementById('edit-details-panel');
-  if(el)el.style.display='none';
-  document.getElementById('edit-details-btn').style.display='';
-  document.getElementById('ingredients-display').style.display='';
+  // If the current history entry is the edit panel, pop it so the back
+  // stack stays aligned with on-screen state.
+  const s = history.state;
+  if(s && s.view === 'detail' && s.editPanel){
+    goBack();
+  } else {
+    hideEditDetailsPanel();
+  }
 }
 
 function saveEditDetails(){
@@ -1224,7 +1327,15 @@ function saveEditDetails(){
   b.initialNutrient=document.getElementById('e-initial-nutrient').value.trim();
   b.pitchOther=document.getElementById('e-pitch-other').value.trim();
   b.startingSG=document.getElementById('e-sg').value.trim();
-  syncBatch();renderDetail();renderBatches();
+  syncBatch();renderBatches();
+  // Pop the edit-panel history entry so back stack stays in sync.
+  const s = history.state;
+  if(s && s.view === 'detail' && s.editPanel){
+    goBack();
+  } else {
+    renderDetail();
+    hideEditDetailsPanel();
+  }
 }
 
 /* ---- STAGE TIMER ---- */
@@ -2053,13 +2164,10 @@ function renderRecipes(){
 }
 
 function showRecipeDetail(id){
-  currentRecipe=recipes.find(r=>r.id===id);
-  if(!currentRecipe)return;
-  renderRecipeDetail();
-  ['batches','add','stats','detail','recipes','recipe-add'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
-  document.getElementById('sec-recipe-detail').classList.add('visible');
-  document.querySelector('.app').classList.add('hero-hidden');
-  window.scrollTo(0,0);
+  const r=recipes.find(x=>x.id===id);
+  if(!r)return;
+  currentRecipe=r;
+  navigate({view:'recipe-detail', recipeId:id});
 }
 
 function renderRecipeDetail(){
@@ -2099,7 +2207,7 @@ function renderRecipeDetail(){
   `;
 }
 
-function showRecipeForm(recipe){
+function fillRecipeForm(recipe){
   editingRecipeId=recipe?recipe.id:null;
   document.getElementById('recipe-form-title').textContent=recipe?'Edit recipe':'New recipe';
   document.getElementById('rf-save-btn').textContent=recipe?'Save changes':'Save recipe';
@@ -2118,7 +2226,11 @@ function showRecipeForm(recipe){
     'rf-pitch-other':recipe?.pitchOther||''
   };
   Object.entries(fields).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
-  showTab('recipe-add');
+}
+
+function showRecipeForm(recipe){
+  fillRecipeForm(recipe);
+  navigate({view:'recipe-add', editingRecipeId: recipe ? recipe.id : null});
 }
 
 function openEditRecipe(id){
@@ -2127,7 +2239,7 @@ function openEditRecipe(id){
 }
 
 function cancelRecipeForm(){
-  editingRecipeId?showTab('recipe-detail'):showTab('recipes');
+  goBack();
 }
 
 function saveRecipe(){
@@ -2150,25 +2262,30 @@ function saveRecipe(){
   if(editingRecipeId){
     const idx=recipes.findIndex(r=>r.id===editingRecipeId);
     if(idx>=0){recipes[idx]={...recipes[idx],...data};currentRecipe=recipes[idx];}
-    saveRecipes();renderRecipeDetail();showTab('recipe-detail');
+    saveRecipes();
+    editingRecipeId=null;
+    goBack();
   } else {
     data.id=Date.now().toString();
     recipes.push(data);
-    saveRecipes();renderRecipes();showTab('recipes');
+    saveRecipes();renderRecipes();
+    goBack();
   }
-  editingRecipeId=null;
 }
 
 function deleteRecipe(id){
   if(!confirm('Delete this recipe?'))return;
   recipes=recipes.filter(r=>r.id!==id);
-  saveRecipes();showTab('recipes');
+  saveRecipes();renderRecipes();
+  goBack();
 }
 
 function startBrewFromRecipe(id){
   const r=recipes.find(r=>r.id===id);
   if(!r)return;
-  showTab('add');
+  // Replace current history entry (recipe-detail) with add, so when the
+  // user saves the brew and lands on Brews, back won't return them here.
+  navigate({view:'add'}, {replace:true});
   const fields={
     'f-juice':r.juice||'',
     'f-campden':r.campden||'',
@@ -2192,6 +2309,8 @@ function startBrewFromRecipe(id){
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}
 loadPrefs();initTheme();
 document.getElementById('f-date').value=today();
+// Initialize history baseline — fresh app load always starts at 'batches'.
+history.replaceState({view:'batches'}, '');
 load();
 </script>
 </body>

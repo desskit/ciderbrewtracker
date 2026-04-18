@@ -9,6 +9,9 @@
   <meta name="apple-mobile-web-app-title" content="Cider Log" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&display=swap" rel="stylesheet">
   <title>Cider Log</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,13 +19,21 @@
       --cider: #C4711A; --cider-light: #FAEEDA; --cider-mid: #EF9F27;
       --cider-dark: #633806; --cider-deep: #412402;
       --green: #1D9E75;
-      --text: #1a1a1a; --text-muted: #666; --border: rgba(0,0,0,0.12);
-      --surface: #fff; --bg: #f5f0eb;
-      --border-radius-md: 8px; --border-radius-lg: 12px;
+      --text: #1a1a1a; --text-muted: #6b5a48; --border: rgba(99,56,6,0.12);
+      --surface: #fffdfa; --surface-2: #fbf5ec; --bg: #f4ece0;
+      --border-radius-md: 8px; --border-radius-lg: 14px;
+      --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(65,36,2,0.06), 0 1px 3px rgba(65,36,2,0.05);
+      --shadow-md: 0 2px 4px rgba(65,36,2,0.08), 0 4px 12px rgba(65,36,2,0.06);
+      --shadow-lg: 0 4px 8px rgba(65,36,2,0.1), 0 10px 24px rgba(65,36,2,0.08);
     }
     [data-theme="dark"] {
-      --text: #f0ead8; --text-muted: #a89880; --border: rgba(255,255,255,0.1);
-      --surface: #2a1f14; --bg: #1a1208;
+      --text: #f0ead8; --text-muted: #a89880; --border: rgba(239,159,39,0.12);
+      --surface: #2a1f14; --surface-2: #352618; --bg: #18100a;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+      --shadow-md: 0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.25);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.45), 0 12px 28px rgba(0,0,0,0.3);
     }
     [data-theme="dark"] .hero { background: #2a1500; }
     [data-theme="dark"] .tab-bar { background: #1a0e00; border-bottom-color: #2a1500; }
@@ -36,6 +47,18 @@
     [data-theme="dark"] .stat-card { background: #3a2510; }
     [data-theme="dark"] .stage-timer.s-primary { background: #0d2b20; border-color: #1D9E75; }
     [data-theme="dark"] .stage-timer.s-secondary { background: #2a1a00; border-color: #EF9F27; }
+    [data-theme="dark"] .stage-timer.s-primary .stage-timer-label,
+    [data-theme="dark"] .stage-timer.s-primary .stage-timer-since,
+    [data-theme="dark"] .stage-timer.s-primary .stage-days-unit { color: #5DCAA5; }
+    [data-theme="dark"] .stage-timer.s-primary .stage-timer-name,
+    [data-theme="dark"] .stage-timer.s-primary .stage-days-num { color: #9FE1CB; }
+    [data-theme="dark"] .stage-timer.s-secondary .stage-timer-label,
+    [data-theme="dark"] .stage-timer.s-secondary .stage-timer-since,
+    [data-theme="dark"] .stage-timer.s-secondary .stage-days-unit { color: #EF9F27; }
+    [data-theme="dark"] .stage-timer.s-secondary .stage-timer-name,
+    [data-theme="dark"] .stage-timer.s-secondary .stage-days-num { color: #FAC775; }
+    [data-theme="dark"] .stage-timer.s-primary .stage-date-edit-btn { background: rgba(93,202,165,0.18); color: #5DCAA5; }
+    [data-theme="dark"] .stage-timer.s-secondary .stage-date-edit-btn { background: rgba(250,199,117,0.18); color: #FAC775; }
     [data-theme="dark"] .chart-wrap { background: #221810; }
     [data-theme="dark"] .sp-primary { background: #0d2b20; color: #5DCAA5; }
     [data-theme="dark"] .sp-secondary { background: #2a1a00; color: #FAC775; }
@@ -46,41 +69,61 @@
     [data-theme="dark"] .overdue-banner { background: #2d0f0f; border-color: #c0392b; }
     [data-theme="dark"] .due-today-banner { background: #2a1a00; border-color: #EF9F27; }
     [data-theme="dark"] body { background-image: none; }
-    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
+    html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
 
     /* HERO */
-    .hero { background: #412402; padding: max(env(safe-area-inset-top, 0px) + 14px, 18px) 1.25rem 0; }
+    .hero { background: linear-gradient(170deg, #4a2905 0%, #2f1a01 100%); padding: max(env(safe-area-inset-top, 0px) + 14px, 18px) 1.25rem 1rem; transition: max-height 0.25s ease, opacity 0.2s ease; overflow: hidden; max-height: 400px; }
+    .hero-hidden .hero { max-height: calc(env(safe-area-inset-top, 0px) + 8px); opacity: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
+    .hero-hidden .hero > * { display: none; }
+    /* Safe-area spacer so detail/status-bar stays dark when hero is hidden */
+    .hero-hidden::before { content: ''; display: block; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px); background: #2f1a01; z-index: 50; max-width: 480px; margin: 0 auto; }
     .hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
-    .hero-title { font-size: 24px; font-weight: 800; color: #FAC775; letter-spacing: -0.5px; }
-    .hero-sub { font-size: 13px; color: #EF9F27; }
-    .hero-badge { background: #633806; color: #FAC775; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
-    .apple-strip { display: flex; gap: 6px; margin-top: 10px; }
-    .apple { width: 10px; height: 10px; border-radius: 50%; background: #EF9F27; opacity: 0.25; }
-    .apple.filled { opacity: 1; }
+    .hero-title { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: #FAC775; letter-spacing: -1.2px; line-height: 1; margin-top: 2px; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
+    .hero-sub { font-size: 13px; color: #EF9F27; font-weight: 500; }
+    .hero-badge { background: rgba(239,159,39,0.15); color: #FAC775; font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 999px; border: 1px solid rgba(239,159,39,0.25); letter-spacing: 0.02em; }
 
-    /* TABS */
-    .tab-bar { display: flex; background: #2C1800; border-bottom: 1px solid #412402; position: sticky; top: 0; z-index: 10; }
-    .tab { flex: 1; text-align: center; padding: 8px 1px 7px; font-size: 10px; font-weight: 600; cursor: pointer; border: none; background: none; color: #8a6630; border-bottom: 2px solid transparent; font-family: inherit; letter-spacing: 0.02em; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: color 0.2s; }
-    .tab.active { color: #FAC775; border-bottom-color: #EF9F27; }
-    .tab-icon { width: 20px; height: 20px; display: block; }
+    /* BOTTOM NAV */
+    .tab-bar {
+      display: flex; background: rgba(44,24,0,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(239,159,39,0.18);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      max-width: 480px; margin: 0 auto;
+      padding: 8px 4px max(env(safe-area-inset-bottom, 0px) + 4px, 8px);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    }
+    .tab {
+      flex: 1; text-align: center; padding: 6px 2px 4px; font-size: 10px; font-weight: 600;
+      cursor: pointer; border: none; background: none; color: #8a6630; font-family: inherit;
+      letter-spacing: 0.02em; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      transition: color 0.2s; position: relative; border-radius: 10px;
+    }
+    .tab-icon-wrap {
+      width: 44px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border-radius: 999px; transition: background 0.25s cubic-bezier(0.22,1,0.36,1);
+    }
+    .tab.active { color: #FAC775; }
+    .tab.active .tab-icon-wrap { background: rgba(239,159,39,0.18); }
+    .tab-icon { width: 20px; height: 20px; display: block; transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); }
+    .tab.active .tab-icon { transform: scale(1.05); }
 
-    .body-pad { padding: 1rem; flex: 1; }
+    /* Body padding accounts for fixed bottom nav */
+    .body-pad { padding: 1rem 1rem calc(1rem + 76px + env(safe-area-inset-bottom, 0px)); flex: 1; }
     .section { display: none; }
     .section.visible { display: block; }
 
     /* FILTER */
-    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; padding: 10px 0 2px; background: transparent; }
-    .filter-btn { flex: 1; padding: 9px 0; font-size: 13px; font-weight: 600; border-radius: 999px; cursor: pointer; border: 1px solid rgba(196,113,26,0.2); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.2s; }
-    .filter-btn.active { background: #EF9F27; color: #412402; border-color: #EF9F27; box-shadow: 0 2px 6px rgba(239,159,39,0.25); }
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; padding: 4px 0 2px; background: transparent; }
+    .filter-btn { flex: 1; padding: 10px 0; font-size: 13px; font-weight: 600; border-radius: 999px; cursor: pointer; border: 1px solid rgba(196,113,26,0.18); background: var(--surface); color: var(--text-muted); font-family: inherit; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+    .filter-btn.active { background: linear-gradient(135deg, #EF9F27, #C4711A); color: #412402; border-color: transparent; box-shadow: 0 2px 8px rgba(239,159,39,0.3); }
     [data-theme="dark"] .filter-btn { border-color: rgba(239,159,39,0.2); color: #BA7517; }
     [data-theme="dark"] .filter-btn.active { background: #633806; color: #FAC775; border-color: #EF9F27; }
 
     /* BREW CARDS */
-    .batch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border-left: 3.5px solid #EF9F27; }
-    .brew-card-grad { background: linear-gradient(145deg, var(--surface) 60%, rgba(29,158,117,0.04) 100%); }
-    .brew-card-grad.status-secondary { background: linear-gradient(145deg, var(--surface) 60%, rgba(239,159,39,0.05) 100%); }
-    .brew-card-grad.status-bottled { background: linear-gradient(145deg, var(--surface) 60%, rgba(180,178,169,0.05) 100%); }
+    .batch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #EF9F27; }
+    .brew-card-grad { background: linear-gradient(135deg, var(--surface) 55%, rgba(29,158,117,0.05) 100%); }
+    .brew-card-grad.status-secondary { background: linear-gradient(135deg, var(--surface) 55%, rgba(239,159,39,0.06) 100%); }
+    .brew-card-grad.status-bottled { background: linear-gradient(135deg, var(--surface) 55%, rgba(180,178,169,0.06) 100%); }
     .recipe-card-style { background: linear-gradient(135deg, var(--surface) 85%, rgba(127,119,221,0.07) 100%); }
     [data-theme="dark"] .brew-card-grad,
     [data-theme="dark"] .brew-card-grad.status-secondary,
@@ -89,12 +132,13 @@
     .batch-card.status-secondary { border-left-color: #BA7517; }
     .batch-card.status-bottled { border-left-color: #B4B2A9; }
     .batch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
-    .batch-name { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
-    .batch-date { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-    .status-pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .batch-name { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.1; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
+    .batch-date { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .status-pill { font-size: 11px; padding: 4px 10px 4px 9px; border-radius: 999px; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; letter-spacing: 0.01em; }
+    .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: currentColor; opacity: 0.75; }
     .sp-primary { background: #E1F5EE; color: #085041; }
     .sp-secondary { background: #FAEEDA; color: #633806; }
-    .sp-bottled { background: #f0ede8; color: #5F5E5A; }
+    .sp-bottled { background: #eeeae4; color: #5F5E5A; }
     .meta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     .meta { font-size: 12px; color: var(--text-muted); }
     .meta b { color: var(--text); font-weight: 600; }
@@ -103,7 +147,7 @@
     .due-today-badge { background: #FAEEDA; color: #633806; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid #EF9F27; }
 
     /* FORMS */
-    .form-wrap { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+    .form-wrap { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); padding: 1.25rem 1.25rem 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
     .form-section-label { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #FAEEDA; }
     .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 500; }
     .form-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; margin-top: -4px; font-style: italic; }
@@ -121,7 +165,7 @@
     /* DETAIL HEADER */
     .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; gap: 12px; }
     .detail-header-left {}
-    .detail-title { font-size: 22px; font-weight: 800; margin-bottom: 3px; letter-spacing: -0.4px; }
+    .detail-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.7px; line-height: 1.05; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
     .detail-sub { font-size: 13px; color: var(--text-muted); }
     .edit-details-btn { background: #FAEEDA; color: #633806; border: 1px solid #EF9F27; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
     .edit-details-btn:active { background: #EF9F27; }
@@ -147,7 +191,7 @@
     .stage-date-input-row input[type=date] { padding: 5px 8px; font-size: 13px; border-radius: 6px; flex: 1; min-width: 130px; }
     .stage-date-save-btn { background: #412402; color: #FAC775; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
     .stage-days { text-align: right; flex-shrink: 0; }
-    .stage-days-num { font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+    .stage-days-num { font-family: var(--font-display); font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -2px; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
     .stage-timer.s-primary .stage-days-num { color: #085041; }
     .stage-timer.s-secondary .stage-days-num { color: #633806; }
     .stage-days-unit { font-size: 12px; font-weight: 600; margin-top: 2px; }
@@ -166,7 +210,7 @@
     .info-card { background: #FAEEDA; border-radius: 12px; padding: 12px 14px; position: relative; overflow: hidden; }
     .info-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; background: linear-gradient(90deg, #EF9F27, transparent); opacity: 0.5; }
     .info-label { font-size: 10px; color: #854F0B; margin-bottom: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-    .info-val { font-size: 18px; font-weight: 800; color: #412402; word-break: break-word; letter-spacing: -0.3px; }
+    .info-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #412402; word-break: break-word; letter-spacing: -0.5px; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
     [data-theme="dark"] .info-card { background: #3a2510; }
     [data-theme="dark"] .info-label { color: #EF9F27; }
     [data-theme="dark"] .info-val { color: #FAC775; }
@@ -180,7 +224,14 @@
     .ing-val { font-size: 14px; font-weight: 600; color: var(--text); text-align: right; }
 
     /* SECTION HEADS */
-    .section-head { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .06em; margin: 1.25rem 0 10px; }
+    .section-head { font-size: 11px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .08em; margin: 1.5rem 0 10px; }
+
+    /* PAGE INTRO (kicker + divider under hero on each tab) */
+    .page-intro { padding: 14px 0 10px; }
+    .page-kicker { font-size: 10px; font-weight: 700; color: #BA7517; text-transform: uppercase; letter-spacing: .14em; margin-bottom: 4px; opacity: 0.85; }
+    .page-kicker.page-kicker-accent { color: #534AB7; }
+    .page-divider { height: 1px; background: linear-gradient(90deg, rgba(239,159,39,0.5), transparent 70%); margin-bottom: 4px; }
+    .page-divider.page-divider-accent { background: linear-gradient(90deg, rgba(127,119,221,0.5), transparent 70%); }
 
     /* LOG ROWS */
     .log-add { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -260,8 +311,8 @@
     [data-theme="dark"] .stat-val { color: #FAC775; }
     [data-theme="dark"] .stat-unit { color: #BA7517; }
     .stat-label { font-size: 10px; color: #854F0B; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .stat-val { font-size: 28px; font-weight: 800; color: #412402; letter-spacing: -0.5px; }
-    .stat-unit { font-size: 14px; color: #BA7517; font-weight: 500; }
+    .stat-val { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: #412402; letter-spacing: -0.8px; line-height: 1; font-optical-sizing: auto; font-variation-settings: "opsz" 144; }
+    .stat-unit { font-family: var(--font-body); font-size: 14px; color: #BA7517; font-weight: 600; }
     .export-btn { background: #FAEEDA; color: #633806; border: 1px solid #EF9F27; border-radius: 12px; padding: 13px 0; width: 100%; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px; transition: background 0.15s, transform 0.1s; }
     .export-btn:active { transform: scale(0.985); }
 
@@ -285,7 +336,7 @@
 
     .tab-bar { border-top: 1px solid rgba(239,159,39,0.15); }
 
-    .batch-card { transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 1px 3px rgba(65,36,2,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+    .batch-card { transition: transform 0.15s, box-shadow 0.2s; box-shadow: var(--shadow-sm); }
     .batch-card:active { transform: scale(0.98); box-shadow: 0 0 0 rgba(0,0,0,0); }
 
     .form-wrap { position: relative; }
@@ -307,7 +358,7 @@
     .stat-card { position: relative; overflow: hidden; }
     .stat-card::after { content: ''; position: absolute; right: -12px; bottom: -12px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.08); pointer-events: none; }
 
-    .hero-kicker { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #BA7517; text-transform: uppercase; margin-bottom: 2px; }
+    .hero-kicker { font-size: 10px; font-weight: 700; letter-spacing: .14em; color: #EF9F27; text-transform: uppercase; margin-bottom: 4px; opacity: 0.9; }
 
     .btn-primary { letter-spacing: 0.02em; position: relative; overflow: hidden; }
     .btn-primary::after { content: ''; position: absolute; top: 0; left: -100%; width: 60px; height: 100%; background: rgba(255,255,255,0.08); transform: skewX(-20deg); transition: left 0.4s; pointer-events: none; }
@@ -316,10 +367,6 @@
     .filter-btn { transition: all 0.15s; }
 
     .export-btn { position: relative; }
-
-    .detail-title { letter-spacing: -0.4px; }
-
-    .hero-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(239,159,39,0.3), transparent); margin-top: 10px; }
 
     /* Dark mode dark-specific refinements */
     [data-theme="dark"] .batch-card { box-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 0 0 1px rgba(239,159,39,0.06); }
@@ -398,7 +445,7 @@
       </g>
 
       <!-- carboy silhouette: wider, shorter, tucked right -->
-      <g transform="translate(132, 26)" opacity="0.6">
+      <g transform="translate(148, 32) scale(0.82)" opacity="0.5">
         <!-- neck - wider -->
         <rect x="15" y="0" width="10" height="7" rx="2.5" fill="#FAC775"/>
         <!-- body: wide shoulders, squat body -->
@@ -445,29 +492,27 @@
       <div>
         <div class="hero-kicker">Craft Cider Tracker</div>
         <div class="hero-title">Cider Log</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
           <div class="hero-sub" id="hero-sub">0 brews tracked</div>
           <div class="hero-badge" id="hero-badge">0 active</div>
         </div>
       </div>
     </div>
-    <div class="hero-divider"></div>
-    <div class="apple-strip" id="apple-strip"></div>
   </div>
 
   <div class="tab-bar">
-    <button class="tab active" onclick="showTab('batches')"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.2"/><path d="M7 4V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 4V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Brews</button>
-    <button class="tab" onclick="showTab('add')"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>New</button>
-    <button class="tab" onclick="showTab('stats')"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="10" width="3.5" height="7" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8.25" y="6" width="3.5" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="13.5" y="3" width="3.5" height="14" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>Stats</button>
-    <button class="tab" onclick="showTab('recipes')"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M5 2h10a2 2 0 012 2v14l-7-3-7 3V4a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Recipes</button>
-    <button class="tab" onclick="showTab('compare')"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="1.5" y="4" width="7" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="11.5" y="4" width="7" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 8l3 0M8.5 12l3 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Compare</button>
+    <button class="tab active" onclick="showTab('batches')"><span class="tab-icon-wrap"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.2"/><path d="M7 4V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 4V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Brews</button>
+    <button class="tab" onclick="showTab('add')"><span class="tab-icon-wrap"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>New</button>
+    <button class="tab" onclick="showTab('stats')"><span class="tab-icon-wrap"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="10" width="3.5" height="7" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8.25" y="6" width="3.5" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="13.5" y="3" width="3.5" height="14" rx="1" stroke="currentColor" stroke-width="1.3"/></svg></span>Stats</button>
+    <button class="tab" onclick="showTab('recipes')"><span class="tab-icon-wrap"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M5 2h10a2 2 0 012 2v14l-7-3-7 3V4a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>Recipes</button>
+    <button class="tab" onclick="showTab('compare')"><span class="tab-icon-wrap"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="1.5" y="4" width="7" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="11.5" y="4" width="7" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 8l3 0M8.5 12l3 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span>Compare</button>
   </div>
 
   <!-- BREWS LIST -->
   <div id="sec-batches" class="section visible body-pad">
-    <div style="padding-top:10px;margin-bottom:-4px">
-      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">The cellar</div>
-      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);opacity:0.35;margin-bottom:0"></div>
+    <div class="page-intro">
+      <div class="page-kicker">The cellar</div>
+      <div class="page-divider"></div>
     </div>
     <div class="filter-bar">
       <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
@@ -523,15 +568,15 @@
 
   <!-- STATS -->
   <div id="sec-stats" class="section body-pad">
-    <div style="padding:12px 0 4px">
-      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Your cellar</div>
-      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);margin-bottom:16px;opacity:0.4"></div>
+    <div class="page-intro">
+      <div class="page-kicker">Your cellar</div>
+      <div class="page-divider"></div>
     </div>
     <div class="stat-grid" id="stats-grid"></div>
-    <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>ABV by batch</div>
+    <div class="section-head">ABV by batch</div>
     <div class="chart-wrap" style="height:200px"><canvas id="stats-chart"></canvas></div>
-    <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.08em;margin:1.25rem 0 10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>Brewing activity</div>
-    <div style="background:var(--surface);border-radius:var(--border-radius-lg);border:0.5px solid var(--border);padding:12px;overflow-x:auto;margin-bottom:1rem">
+    <div class="section-head">Brewing activity</div>
+    <div style="background:var(--surface);border-radius:var(--border-radius-lg);border:1px solid var(--border);padding:14px;overflow-x:auto;margin-bottom:1rem;box-shadow:var(--shadow-sm)">
       <div id="brew-heatmap"></div>
     </div>
   </div>
@@ -544,11 +589,11 @@
 
   <!-- RECIPES LIST -->
   <div id="sec-recipes" class="section body-pad">
-    <div style="padding:12px 0 0">
-      <div style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Recipe book</div>
-      <div style="height:1px;background:linear-gradient(90deg,#7F77DD,transparent);margin-bottom:12px;opacity:0.4"></div>
+    <div class="page-intro">
+      <div class="page-kicker page-kicker-accent">Recipe book</div>
+      <div class="page-divider page-divider-accent"></div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <span style="font-size:13px;color:var(--text-muted)" id="recipe-count">0 recipes</span>
       <button class="edit-details-btn" style="background:#EEEDFE;color:#3C3489;border-color:#AFA9EC" onclick="showTab('recipe-add')">+ New recipe</button>
     </div>
@@ -601,9 +646,9 @@
 
   <!-- SETTINGS -->
   <div id="sec-settings" class="section body-pad">
-    <div style="padding:12px 0 4px">
-      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Settings</div>
-      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);margin-bottom:16px;opacity:0.4"></div>
+    <div class="page-intro">
+      <div class="page-kicker">Settings</div>
+      <div class="page-divider"></div>
     </div>
 
     <div class="form-wrap" style="margin-bottom:1rem">
@@ -690,9 +735,9 @@
 
   <!-- COMPARE -->
   <div id="sec-compare" class="section body-pad">
-    <div style="padding:12px 0 4px">
-      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Batch comparison</div>
-      <div style="height:1px;background:linear-gradient(90deg,#EF9F27,transparent);margin-bottom:14px;opacity:0.4"></div>
+    <div class="page-intro">
+      <div class="page-kicker">Batch comparison</div>
+      <div class="page-divider"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div>
@@ -976,8 +1021,6 @@ function updateHero(){
   const active=batches.filter(b=>b.status!=='bottled').length;
   document.getElementById('hero-sub').textContent=batches.length+' brew'+(batches.length!==1?'s':'')+' tracked';
   document.getElementById('hero-badge').textContent=active+' active';
-  const dots=Math.min(batches.length,12);
-  document.getElementById('apple-strip').innerHTML=Array.from({length:Math.max(dots,3)},(_,i)=>`<div class="apple${i<dots?' filled':''}"></div>`).join('');
 }
 
 function setFilter(f){
@@ -990,6 +1033,9 @@ function showTab(t){
   ['batches','add','stats','detail','recipes','recipe-add','recipe-detail','compare','settings'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('visible',s===t));
   const labels={batches:'brews',add:'new',stats:'stats',recipes:'recipes','recipe-add':'recipes','recipe-detail':'recipes',compare:'compare',settings:'__none__'};
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(labels[t]||'__')));
+  // Hide hero on deep detail views (recipe-add/recipe-detail) to give brew name prominence
+  const hideHeroOn = ['detail','recipe-detail','recipe-add'];
+  document.querySelector('.app').classList.toggle('hero-hidden', hideHeroOn.includes(t));
   window.scrollTo(0,0);
   if(t==='stats')renderStats();
   if(t==='add')document.getElementById('f-date').value=today();
@@ -1004,6 +1050,8 @@ function showDetail(id){
   renderDetail();
   ['batches','add','stats'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
   document.getElementById('sec-detail').classList.add('visible');
+  document.querySelector('.app').classList.add('hero-hidden');
+  window.scrollTo(0,0);
 }
 
 function calcABV(b){
@@ -1309,7 +1357,7 @@ function nutrientSectionHTML(b){
     <button class="wide" onclick="addScheduledDose()">+ Schedule</button>
   </div>
   <div class="log-list" style="margin-bottom:1rem">${schedRows}</div>
-  <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>Additions log</div>
+  <div class="section-head" style="margin-top:0">Additions log</div>
   <div class="log-add" style="flex-wrap:wrap">
     <input class="date-inp" id="nut-date" type="date" value="${today()}" />
     <input id="nut-name" placeholder="Nutrient (e.g. Fermaid-K)" style="flex:2;min-width:120px"/>
@@ -1850,7 +1898,7 @@ function renderComparison(){
         ${row('Status',STATUS[a.status]?.short,STATUS[b.status]?.short)}
       </table>
     </div>
-    <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:3px;height:12px;background:#EF9F27;border-radius:2px"></span>SG over time</div>
+    <div class="section-head">SG over time</div>
     <div class="chart-wrap" style="height:220px"><canvas id="cmp-chart"></canvas></div>
   `;
 
@@ -2010,6 +2058,8 @@ function showRecipeDetail(id){
   renderRecipeDetail();
   ['batches','add','stats','detail','recipes','recipe-add'].forEach(s=>document.getElementById('sec-'+s).classList.remove('visible'));
   document.getElementById('sec-recipe-detail').classList.add('visible');
+  document.querySelector('.app').classList.add('hero-hidden');
+  window.scrollTo(0,0);
 }
 
 function renderRecipeDetail(){

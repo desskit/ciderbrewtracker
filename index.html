@@ -318,6 +318,7 @@
 
     .empty { text-align: center; padding: 3rem 1rem; }
     .empty-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .empty-sub { font-size: 13px; color: var(--text-muted); }
 
     .collapsible-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; padding: 4px 0 10px; border: none; background: none; width: 100%; font-family: inherit; }
     .collapsible-head .section-head { margin: 0; }
@@ -390,7 +391,7 @@
 <body>
 <div class="app">
   <div class="hero">
-    <svg style="position:absolute;right:0;top:0;bottom:0;pointer-events:none;height:100%;width:200px;overflow:visible" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <svg style="position:absolute;right:0;top:0;bottom:0;pointer-events:none;height:100%;width:200px;overflow:visible" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid slice">
       <defs>
         <linearGradient id="hfade" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stop-color="#412402" stop-opacity="1"/>
@@ -944,6 +945,8 @@ function addPH(){
   const ph=document.getElementById('ph-val')?.value.trim();
   const note=document.getElementById('ph-note')?.value.trim();
   if(!ph)return;
+  const n=parseFloat(ph);
+  if(isNaN(n)||n<0||n>14){alert('pH must be between 0 and 14.');return;}
   currentBatch.phLog=currentBatch.phLog||[];
   currentBatch.phLog.push({date,ph,note});
   currentBatch.phLog.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1012,6 +1015,7 @@ function load(){
     if(!b.tempLog)b.tempLog=[];
     if(!b.phLog)b.phLog=[];
     if(!b.tastingLog){b.tastingLog=[];if(b.notes){b.tastingLog.push({date:b.startDate||today(),note:b.notes});b.notes='';}}
+    b.tastingLog.sort((x,y)=>(x.date||'').localeCompare(y.date||''));
   });
   renderBatches();updateHero();
 }
@@ -1186,8 +1190,7 @@ function renderBatches(){
     const oc=overdueCount(b);
     const hasRealOverdue=(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today());
     const overdueHTML=oc>0?`<span class="${hasRealOverdue?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';
-    const cardAccent=b.status==='bottled'?'rgba(180,178,169,0.06)':b.status==='secondary'?'rgba(239,159,39,0.06)':'rgba(29,158,117,0.06)';
-    return `<div class="batch-card ${st.cardCls} brew-card-grad" data-accent="${cardAccent}" onclick="showDetail('${b.id}')">
+    return `<div class="batch-card ${st.cardCls} brew-card-grad" onclick="showDetail('${b.id}')">
       <div class="batch-row">
         <span class="batch-name">${esc(b.name)}</span>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
@@ -1258,37 +1261,37 @@ function renderEditDetailsPanel(){
   el.innerHTML=`
     <div class="form-wrap" style="margin-top:1rem">
       <div class="form-section-label">Brew info</div>
-      <div class="form-group"><label class="form-label">Batch name</label><input id="e-name" value="${b.name||''}" /></div>
+      <div class="form-group"><label class="form-label">Batch name</label><input id="e-name" value="${esc(b.name)}" /></div>
       <div class="row2">
-        <div class="form-group"><label class="form-label">Quantity</label><input id="e-qty" value="${b.qty||''}" /></div>
-        <div class="form-group"><label class="form-label">Start date</label><input id="e-date" type="date" value="${b.startDate||''}" /></div>
+        <div class="form-group"><label class="form-label">Quantity</label><input id="e-qty" value="${esc(b.qty)}" /></div>
+        <div class="form-group"><label class="form-label">Start date</label><input id="e-date" type="date" value="${esc(b.startDate)}" /></div>
       </div>
-      <div class="form-group"><label class="form-label">Apple juice / base</label><input id="e-juice" value="${b.juice||''}" placeholder="Brand, type, volume..." /></div>
+      <div class="form-group"><label class="form-label">Apple juice / base</label><input id="e-juice" value="${esc(b.juice)}" placeholder="Brand, type, volume..." /></div>
     </div>
     <div class="form-wrap">
       <div class="form-section-label">Pre-fermentation</div>
       <p class="form-hint">Added before pitching yeast</p>
       <div class="row2">
-        <div class="form-group"><label class="form-label">Campden tablets</label><input id="e-campden" value="${b.campden||''}" placeholder="e.g. 1 tablet" /></div>
-        <div class="form-group"><label class="form-label">Pectic enzyme</label><input id="e-pectic" value="${b.pectic||''}" placeholder="e.g. 0.5 tsp" /></div>
+        <div class="form-group"><label class="form-label">Campden tablets</label><input id="e-campden" value="${esc(b.campden)}" placeholder="e.g. 1 tablet" /></div>
+        <div class="form-group"><label class="form-label">Pectic enzyme</label><input id="e-pectic" value="${esc(b.pectic)}" placeholder="e.g. 0.5 tsp" /></div>
       </div>
-      <div class="form-group"><label class="form-label">Acid blend</label><input id="e-acid" value="${b.acid||''}" placeholder="e.g. 1 tsp" /></div>
-      <div class="form-group"><label class="form-label">Other pre-ferm additions</label><input id="e-preferm-other" value="${b.prefermOther||''}" placeholder="e.g. Bentonite, tannin..." /></div>
+      <div class="form-group"><label class="form-label">Acid blend</label><input id="e-acid" value="${esc(b.acid)}" placeholder="e.g. 1 tsp" /></div>
+      <div class="form-group"><label class="form-label">Other pre-ferm additions</label><input id="e-preferm-other" value="${esc(b.prefermOther)}" placeholder="e.g. Bentonite, tannin..." /></div>
     </div>
     <div class="form-wrap">
       <div class="form-section-label">At pitch</div>
       <p class="form-hint">Added when pitching yeast</p>
-      <div class="form-group"><label class="form-label">Yeast</label><input id="e-yeast" value="${b.yeast||''}" placeholder="Fleischmann's, EC-1118..." /></div>
+      <div class="form-group"><label class="form-label">Yeast</label><input id="e-yeast" value="${esc(b.yeast)}" placeholder="Fleischmann's, EC-1118..." /></div>
       <div class="row2">
-        <div class="form-group"><label class="form-label">Sugar type</label><input id="e-sugar-type" value="${b.sugarType||''}" placeholder="Brown sugar, honey..." /></div>
-        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="e-sugar-qty" value="${b.sugarQty||''}" placeholder="200g, 1 cup..." /></div>
+        <div class="form-group"><label class="form-label">Sugar type</label><input id="e-sugar-type" value="${esc(b.sugarType)}" placeholder="Brown sugar, honey..." /></div>
+        <div class="form-group"><label class="form-label">Sugar quantity</label><input id="e-sugar-qty" value="${esc(b.sugarQty)}" placeholder="200g, 1 cup..." /></div>
       </div>
-      <div class="form-group"><label class="form-label">Initial nutrient addition</label><input id="e-initial-nutrient" value="${b.initialNutrient||''}" placeholder="e.g. 2g Fermaid-O" /></div>
-      <div class="form-group"><label class="form-label">Other at-pitch additions</label><input id="e-pitch-other" value="${b.pitchOther||''}" placeholder="e.g. Energizer, Go-Ferm..." /></div>
+      <div class="form-group"><label class="form-label">Initial nutrient addition</label><input id="e-initial-nutrient" value="${esc(b.initialNutrient)}" placeholder="e.g. 2g Fermaid-O" /></div>
+      <div class="form-group"><label class="form-label">Other at-pitch additions</label><input id="e-pitch-other" value="${esc(b.pitchOther)}" placeholder="e.g. Energizer, Go-Ferm..." /></div>
     </div>
     <div class="form-wrap">
       <div class="form-section-label">Fermentation</div>
-      <div class="form-group"><label class="form-label">Starting SG</label><input id="e-sg" type="number" step="0.001" value="${b.startingSG||''}" placeholder="1.055" /></div>
+      <div class="form-group"><label class="form-label">Starting SG</label><input id="e-sg" type="number" step="0.001" value="${esc(b.startingSG)}" placeholder="1.055" /></div>
     </div>
     <button class="btn-primary" onclick="saveEditDetails()">Save changes</button>
     <button class="btn-secondary" onclick="cancelEditDetails()">Cancel</button>
@@ -1539,8 +1542,8 @@ function editStageHistoryEntry(idx){
     <div style="width:100%;padding:4px 0">
       <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">${STATUS[entry.stage]?.label||entry.stage}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Start date</div><input type="date" id="she-start-${idx}" value="${entry.startDate||''}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
-        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">End date</div><input type="date" id="she-end-${idx}" value="${entry.endDate||''}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Start date</div><input type="date" id="she-start-${idx}" value="${esc(entry.startDate)}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">End date</div><input type="date" id="she-end-${idx}" value="${esc(entry.endDate)}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px">
         <button class="stage-date-save-btn" onclick="saveStageHistoryEntry(${idx})">Save</button>
@@ -1552,9 +1555,10 @@ function editStageHistoryEntry(idx){
 function saveStageHistoryEntry(idx){
   const startVal=document.getElementById('she-start-'+idx)?.value;
   const endVal=document.getElementById('she-end-'+idx)?.value;
-  if(startVal)currentBatch.stageHistory[idx].startDate=startVal;
-  if(endVal)currentBatch.stageHistory[idx].endDate=endVal;
-  if(startVal&&endVal)currentBatch.stageHistory[idx].days=daysBetween(startVal,endVal);
+  const e=currentBatch.stageHistory[idx];
+  if(startVal)e.startDate=startVal;
+  if(endVal)e.endDate=endVal;
+  if(e.startDate&&e.endDate)e.days=daysBetween(e.startDate,e.endDate);
   syncBatch();renderDetail();
 }
 
@@ -1694,8 +1698,8 @@ function editSGReading(idx){
   if(!row)return;
   row.innerHTML=`
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%">
-      <input type="date" id="sg-edit-date-${idx}" value="${r.date}" style="font-size:13px;padding:5px 8px;width:135px;flex:none"/>
-      <input type="number" step="0.001" id="sg-edit-val-${idx}" value="${r.val}" style="font-size:13px;padding:5px 8px;flex:1;min-width:80px"/>
+      <input type="date" id="sg-edit-date-${idx}" value="${esc(r.date)}" style="font-size:13px;padding:5px 8px;width:135px;flex:none"/>
+      <input type="number" step="0.001" id="sg-edit-val-${idx}" value="${esc(r.val)}" style="font-size:13px;padding:5px 8px;flex:1;min-width:80px"/>
       <button class="stage-date-save-btn" onclick="saveSGReading(${idx})">Save</button>
       <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
     </div>`;
@@ -1716,11 +1720,11 @@ function deleteSGReading(idx){
   syncBatch();renderDetail();
 }
 function tastingLogHTML(b){
-  const log=(b.tastingLog||[]);
+  const log=(b.tastingLog||[]).slice().sort((a,c)=>(a.date||'').localeCompare(c.date||''));
   const rows=log.length
-    ? log.map((e,i)=>`<div class="log-row">
-        <div style="flex:1"><div class="log-main" style="font-weight:400;font-size:14px">${esc(e.note)}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
-        <div class="log-right"><button class="log-del" onclick="deleteTastingNote(${i})">x</button></div>
+    ? log.slice().reverse().map((e,i,arr)=>`<div class="log-row">
+        <div style="flex:1"><div class="log-main" style="font-weight:400;font-size:14px;white-space:pre-wrap">${esc(e.note)}</div><div class="log-sub">${fmtDate(e.date)}</div></div>
+        <div class="log-right"><button class="log-del" onclick="deleteTastingNote(${arr.length-1-i})">x</button></div>
       </div>`).join('')
     : `<div class="log-empty">No notes yet.</div>`;
   return `<div class="section-head">Tasting notes &amp; observations</div>
@@ -1738,6 +1742,7 @@ function addTastingNote(){
   if(!note)return;
   currentBatch.tastingLog=currentBatch.tastingLog||[];
   currentBatch.tastingLog.push({date,note});
+  currentBatch.tastingLog.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   syncBatch();renderDetail();
 }
 
@@ -1851,7 +1856,7 @@ function renderHeatmap(){
   let monthLabels='<div style="display:flex;gap:2px;padding-left:24px;margin-bottom:2px">';
   let lastMonth=-1;
   weeks.forEach((w,wi)=>{
-    const m=new Date(w[0].date).getMonth();
+    const m=new Date(w[0].date+'T12:00:00').getMonth();
     if(m!==lastMonth){monthLabels+=`<div style="width:14px;font-size:9px;color:var(--text-muted);text-align:center">${months[m]}</div>`;lastMonth=m;}
     else monthLabels+=`<div style="width:14px"></div>`;
   });
@@ -1906,7 +1911,7 @@ function bottleYieldHTML(b){
 function saveBottleYield(){
   currentBatch.bottleCount=document.getElementById('by-count')?.value||'';
   currentBatch.bottleSize=document.getElementById('by-size')?.value||'';
-  syncBatch();
+  syncBatch();renderDetail();
 }
 
 /* ---- COST TRACKER ---- */
@@ -1944,6 +1949,8 @@ function addCost(){
   const item=document.getElementById('cost-item')?.value.trim();
   const cost=document.getElementById('cost-val')?.value.trim();
   if(!item||!cost)return;
+  const n=parseFloat(cost);
+  if(isNaN(n)||n<0){alert('Enter a valid cost.');return;}
   currentBatch.costLog=currentBatch.costLog||[];
   currentBatch.costLog.push({date,item,cost});
   currentBatch.costLog.sort((a,b)=>a.date.localeCompare(b.date));
@@ -2317,7 +2324,7 @@ function startBrewFromRecipe(id){
   document.getElementById('f-date').value=today();
   document.getElementById('f-qty').value='';
   document.getElementById('f-sg').value='';
-  document.getElementById('f-notes').value=r.notes?'From recipe: '+r.name:'';
+  document.getElementById('f-notes').value='From recipe: '+r.name+(r.notes?'\n\n'+r.notes:'');
   document.getElementById('f-name').focus();
 }
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}

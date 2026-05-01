@@ -766,7 +766,8 @@ const STATUS={
   bottled:{label:'Bottled / finished',short:'Bottled',cls:'sp-bottled',cardCls:'status-bottled',optCls:'s-bottled',timerCls:''}
 };
 
-function today(){return new Date().toISOString().slice(0,10);}
+function toLocalISODate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}
+function today(){return toLocalISODate(new Date());}
 function daysBetween(a,b){const da=new Date(a+'T12:00:00'),db=new Date(b+'T12:00:00');da.setHours(0,0,0,0);db.setHours(0,0,0,0);return Math.floor((db-da)/86400000);}
 function daysSince(d){return d?daysBetween(d,today()):null;}
 function fmtDuration(n){if(n===null||isNaN(n))return'—';if(n===0)return'<1 day';return n===1?'1 day':n+' days';}
@@ -1837,7 +1838,7 @@ function renderHeatmap(){
   let cur=new Date(startDate);
   while(cur.getDay()!==0){cur.setDate(cur.getDate()-1);}
   while(cur<=now){
-    const ds=cur.toISOString().slice(0,10);
+    const ds=toLocalISODate(cur);
     const count=dateMap[ds]||0;
     const isFuture=cur>now;
     week.push({date:ds,count,isFuture});

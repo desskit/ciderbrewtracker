@@ -174,6 +174,14 @@
     .stage-timer { border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
     .stage-timer.s-primary { background: #E1F5EE; border: 1px solid #9FE1CB; }
     .stage-timer.s-secondary { background: #FAEEDA; border: 1px solid #FAC775; }
+    .stage-timer.stage-timer-bottled { background: #eeeae4; border: 1px solid #B4B2A9; }
+    .stage-timer.stage-timer-bottled .stage-timer-label { color: #5F5E5A; }
+    .stage-timer.stage-timer-bottled .stage-timer-since { color: #444441; }
+    .stage-timer.stage-timer-bottled .stage-date-edit-btn { color: #5F5E5A; background: rgba(0,0,0,0.08); }
+    [data-theme="dark"] .stage-timer.stage-timer-bottled { background: #2a2520; border-color: rgba(180,178,169,0.3); }
+    [data-theme="dark"] .stage-timer.stage-timer-bottled .stage-timer-label { color: #B4B2A9; }
+    [data-theme="dark"] .stage-timer.stage-timer-bottled .stage-timer-since { color: #C8C6BD; }
+    [data-theme="dark"] .stage-timer.stage-timer-bottled .stage-date-edit-btn { color: #B4B2A9; background: rgba(180,178,169,0.12); }
     .stage-timer-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .stage-timer.s-primary .stage-timer-label { color: #0F6E56; }
     .stage-timer.s-secondary .stage-timer-label { color: #854F0B; }
@@ -776,7 +784,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -1012,6 +1020,9 @@ function load(){
     if(!b.costLog)b.costLog=[];
     if(b.bottleCount===undefined)b.bottleCount='';
     if(b.bottleSize===undefined)b.bottleSize='';
+    if(b.bottles===undefined){
+      b.bottles=(b.bottleCount||b.bottleSize)?[{count:b.bottleCount||'',size:b.bottleSize||''}]:[];
+    }
     if(!b.tempLog)b.tempLog=[];
     if(!b.phLog)b.phLog=[];
     if(!b.tastingLog){b.tastingLog=[];if(b.notes){b.tastingLog.push({date:b.startDate||today(),note:b.notes});b.notes='';}}
@@ -1357,7 +1368,19 @@ function saveEditDetails(){
 
 /* ---- STAGE TIMER ---- */
 function stageTimerHTML(b){
-  const s=b.status;if(s==='bottled')return'';
+  const s=b.status;
+  if(s==='bottled'){
+    const d=(b.stageStartDates||{}).bottled;
+    return `<div class="stage-timer stage-timer-bottled">
+      <div style="flex:1">
+        <div class="stage-timer-label">Bottled</div>
+        <div class="stage-date-row">
+          <span class="stage-timer-since">${d?'on '+fmtDate(d):'no date set'}</span>
+          <button class="stage-date-edit-btn" onclick="editStageDate()">Edit</button>
+        </div>
+      </div>
+    </div>`;
+  }
   const st=STATUS[s];
   const stageDate=(b.stageStartDates||{})[s];
   const days=stageDate?daysSince(stageDate):null;
@@ -1377,9 +1400,21 @@ function stageTimerHTML(b){
 }
 
 function editStageDate(){
-  const b=currentBatch;const s=b.status;if(s==='bottled')return;
-  const st=STATUS[s];
+  const b=currentBatch;const s=b.status;
   const stageDate=(b.stageStartDates||{})[s];
+  if(s==='bottled'){
+    document.querySelector('.stage-timer').innerHTML=`
+      <div style="flex:1">
+        <div class="stage-timer-label">Bottled</div>
+        <div class="stage-date-input-row">
+          <input type="date" id="stage-date-input" value="${stageDate||today()}" max="${today()}" />
+          <button class="stage-date-save-btn" onclick="saveStageDate('bottled')">Save</button>
+          <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
+        </div>
+      </div>`;
+    return;
+  }
+  const st=STATUS[s];
   const days=stageDate?daysSince(stageDate):null;
   const numStr=days===null?'—':days===0?'<1':String(days);
   const unit=days===1?'day':'days';
@@ -1886,31 +1921,80 @@ function renderHeatmap(){
 
 /* ---- CSV EXPORT ---- */
 /* ---- BOTTLE YIELD ---- */
+function bottleTotals(b){
+  let arr;
+  if(b.bottles!==undefined) arr=b.bottles;
+  else if(b.bottleCount||b.bottleSize) arr=[{count:b.bottleCount||'',size:b.bottleSize||''}];
+  else arr=[];
+  let totalCount=0,totalL=0;
+  arr.forEach(e=>{
+    const c=parseFloat(e.count)||0,s=parseFloat(e.size)||0;
+    totalCount+=c;
+    totalL+=c*s/1000;
+  });
+  return {totalCount,totalL,rows:arr};
+}
+
 function bottleYieldHTML(b){
-  const count=b.bottleCount||'';
-  const size=b.bottleSize||'';
-  const totalL=count&&size?(parseFloat(count)*(parseFloat(size)/1000)).toFixed(2):null;
+  const t=bottleTotals(b);
   const costTotal=(b.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
-  const cpp=count&&costTotal?(costTotal/parseFloat(count)).toFixed(2):null;
+  const cpp=t.totalCount&&costTotal?(costTotal/t.totalCount).toFixed(2):null;
+  const rows=t.rows.length?t.rows:[{count:'',size:''}];
+  const showRemove=rows.length>1;
+  const rowsHTML=rows.map((r,i)=>`
+    <div class="by-row" style="display:grid;grid-template-columns:1fr 1fr ${showRemove?'auto':''};gap:10px;align-items:end;margin-bottom:8px">
+      <div class="form-group" style="margin-bottom:0">
+        ${i===0?'<label class="form-label">Number of bottles</label>':''}
+        <input id="by-count-${i}" type="number" min="0" placeholder="e.g. 12" value="${esc(r.count)}" onchange="saveBottleRow(${i})" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        ${i===0?'<label class="form-label">Size (ml)</label>':''}
+        <input id="by-size-${i}" type="number" min="0" placeholder="e.g. 500" value="${esc(r.size)}" onchange="saveBottleRow(${i})" />
+      </div>
+      ${showRemove?`<button class="log-del" onclick="removeBottleRow(${i})" style="font-size:18px;padding:8px 6px" aria-label="Remove">×</button>`:''}
+    </div>`).join('');
   return `<div class="section-head">Bottle yield</div>
   <div class="form-wrap" style="margin-bottom:0">
-    <div class="row2" style="margin-bottom:10px">
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">Number of bottles</label>
-        <input id="by-count" type="number" min="0" placeholder="e.g. 12" value="${count}" onchange="saveBottleYield()" /></div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">Bottle size (ml)</label>
-        <input id="by-size" type="number" min="0" placeholder="e.g. 500" value="${size}" onchange="saveBottleYield()" /></div>
-    </div>
-    ${count||size?`<div style="display:flex;gap:10px;flex-wrap:wrap">
-      ${count?`<span style="font-size:13px;color:var(--text-muted)">Bottles: <b style="color:var(--text)">${count}</b></span>`:''}
-      ${totalL?`<span style="font-size:13px;color:var(--text-muted)">Total: <b style="color:var(--text)">${totalL}L</b></span>`:''}
+    ${rowsHTML}
+    <button class="export-btn" style="margin-top:6px;padding:10px 0;font-size:13px" onclick="addBottleRow()">+ Add another size</button>
+    ${t.totalCount||t.totalL?`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      ${t.totalCount?`<span style="font-size:13px;color:var(--text-muted)">Bottles: <b style="color:var(--text)">${t.totalCount}</b></span>`:''}
+      ${t.totalL?`<span style="font-size:13px;color:var(--text-muted)">Total: <b style="color:var(--text)">${t.totalL.toFixed(2)}L</b></span>`:''}
       ${cpp?`<span style="font-size:13px;color:#085041">Cost/bottle: <b>${curr(cpp)}</b></span>`:''}
     </div>`:''}
   </div>`;
 }
 
-function saveBottleYield(){
-  currentBatch.bottleCount=document.getElementById('by-count')?.value||'';
-  currentBatch.bottleSize=document.getElementById('by-size')?.value||'';
+function readBottleRows(){
+  const arr=[];
+  document.querySelectorAll('.by-row').forEach((row,i)=>{
+    arr.push({
+      count:document.getElementById('by-count-'+i)?.value||'',
+      size:document.getElementById('by-size-'+i)?.value||''
+    });
+  });
+  return arr;
+}
+
+function saveBottleRow(i){
+  if(!currentBatch.bottles)currentBatch.bottles=[];
+  while(currentBatch.bottles.length<=i)currentBatch.bottles.push({count:'',size:''});
+  currentBatch.bottles[i]={
+    count:document.getElementById('by-count-'+i)?.value||'',
+    size:document.getElementById('by-size-'+i)?.value||''
+  };
+  syncBatch();renderDetail();
+}
+
+function addBottleRow(){
+  currentBatch.bottles=readBottleRows();
+  currentBatch.bottles.push({count:'',size:''});
+  syncBatch();renderDetail();
+}
+
+function removeBottleRow(i){
+  currentBatch.bottles=readBottleRows();
+  currentBatch.bottles.splice(i,1);
   syncBatch();renderDetail();
 }
 
@@ -1918,7 +2002,7 @@ function saveBottleYield(){
 function costTrackerHTML(b){
   const log=(b.costLog||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const total=log.reduce((s,e)=>s+parseFloat(e.cost||0),0);
-  const count=parseFloat(b.bottleCount||0);
+  const count=bottleTotals(b).totalCount;
   const cpp=count&&total?(total/count).toFixed(2):null;
   const litres=parseQtyLitres(b.qty);
   const cpl=litres&&total?(total/litres).toFixed(2):null;
@@ -1996,8 +2080,9 @@ function renderComparison(){
   const rdgsB=(b.sgReadings||[]).slice().sort((x,y)=>x.date.localeCompare(y.date));
   const costA=(a.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
   const costB=(b.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
-  const cppA=a.bottleCount&&costA?(costA/parseFloat(a.bottleCount)).toFixed(2):null;
-  const cppB=b.bottleCount&&costB?(costB/parseFloat(b.bottleCount)).toFixed(2):null;
+  const tA=bottleTotals(a),tB=bottleTotals(b);
+  const cppA=tA.totalCount&&costA?(costA/tA.totalCount).toFixed(2):null;
+  const cppB=tB.totalCount&&costB?(costB/tB.totalCount).toFixed(2):null;
 
   function row(label,vA,vB){
     const highlight=vA&&vB&&vA!==vB;
@@ -2024,7 +2109,7 @@ function renderComparison(){
         ${row('Starting SG',a.startingSG,b.startingSG)}
         ${row('Latest SG',rdgsA.length?rdgsA[rdgsA.length-1].val:null,rdgsB.length?rdgsB[rdgsB.length-1].val:null)}
         ${row('Est. ABV',abvA?'~'+abvA+'%':null,abvB?'~'+abvB+'%':null)}
-        ${row('Bottles',a.bottleCount,b.bottleCount)}
+        ${row('Bottles',tA.totalCount||null,tB.totalCount||null)}
         ${row('Total cost',costA?curr(costA):null,costB?curr(costB):null)}
         ${row('Cost / bottle',cppA?curr(cppA):null,cppB?curr(cppB):null)}
         ${row('Status',STATUS[a.status]?.short,STATUS[b.status]?.short)}

@@ -1562,10 +1562,34 @@ function stageHistoryHTML(b){
     const dateRange=r.startDate?(r.endDate?fmtDate(r.startDate)+' → '+fmtDate(r.endDate):fmtDate(r.startDate)+' → now'):'—';
     const durStr=r.ongoing?fmtDuration(r.days)+' so far':fmtDuration(r.days);
     const ts=r.recordedAt?`<div class="sh-ts">recorded ${r.recordedAt}</div>`:'';
-    const editBtns=r.histIdx>=0?`<div style="display:flex;gap:4px;margin-left:8px"><button class="log-del" style="font-size:12px;color:#BA7517" onclick="editStageHistoryEntry(${r.histIdx})">✎</button><button class="log-del" onclick="deleteStageHistoryEntry(${r.histIdx})">×</button></div>`:'';
+    const editBtns=r.histIdx>=0
+      ? `<div style="display:flex;gap:4px;margin-left:8px"><button class="log-del" style="font-size:12px;color:#BA7517" onclick="editStageHistoryEntry(${r.histIdx})">✎</button><button class="log-del" onclick="deleteStageHistoryEntry(${r.histIdx})">×</button></div>`
+      : `<div style="display:flex;gap:4px;margin-left:8px"><button class="log-del" style="font-size:12px;color:#BA7517" onclick="editCurrentStageInline()" aria-label="Edit start date">✎</button></div>`;
     return `<div class="stage-history-row"><div class="sh-left"><div class="sh-dot s-${r.stage}"></div><div><div class="sh-name">${st.label}</div><div class="sh-dates">${dateRange}</div>${ts}</div></div><div style="display:flex;align-items:center"><div class="sh-duration${r.ongoing?' ongoing':''}">${durStr}</div>${editBtns}</div></div>`;
   }).join('');
   return `<div class="section-head">Stage history</div><div class="stage-history">${rowsHTML}</div>`;
+}
+
+function editCurrentStageInline(){
+  const b=currentBatch;
+  const s=b.status;
+  const d=(b.stageStartDates||{})[s]||'';
+  const rows=document.querySelectorAll('.stage-history-row');
+  const row=rows[rows.length-1];
+  if(!row)return;
+  const labelText=STATUS[s]?.label||s;
+  const dateLabel=s==='bottled'?'Bottled date':'Start date';
+  row.innerHTML=`
+    <div style="width:100%;padding:4px 0">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">${labelText}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">${dateLabel}</div><input type="date" id="stage-date-input" value="${esc(d)||today()}" max="${today()}" style="font-size:13px;padding:5px 8px;width:135px"/></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="stage-date-save-btn" onclick="saveStageDate('${s}')">Save</button>
+        <button class="stage-date-save-btn" style="background:none;color:var(--text-muted);border:1px solid var(--border)" onclick="renderDetail()">Cancel</button>
+      </div>
+    </div>`;
 }
 
 function editStageHistoryEntry(idx){

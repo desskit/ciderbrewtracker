@@ -139,6 +139,10 @@
     .sp-primary { background: #E1F5EE; color: #085041; }
     .sp-secondary { background: #FAEEDA; color: #633806; }
     .sp-bottled { background: #eeeae4; color: #5F5E5A; }
+    .archived-pill { background: #e8e3da; color: #6F6B62; }
+    [data-theme="dark"] .archived-pill { background: #2a2520; color: #B4B2A9; }
+    .batch-card.archived { opacity: 0.7; }
+    .batch-card.archived .batch-name { color: var(--text-muted); }
     .meta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     .meta { font-size: 12px; color: var(--text-muted); }
     .meta b { color: var(--text); font-weight: 600; }
@@ -527,6 +531,7 @@
       <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
       <button class="filter-btn" id="filter-inprogress" onclick="setFilter('inprogress')">In progress</button>
       <button class="filter-btn" id="filter-finished" onclick="setFilter('finished')">Finished</button>
+      <button class="filter-btn" id="filter-archived" onclick="setFilter('archived')">Archived</button>
     </div>
     <div id="batch-list"></div>
   </div>
@@ -784,7 +789,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -1018,6 +1023,7 @@ function load(){
     if(!b.nutrientSchedule)b.nutrientSchedule=[];
     if(!b.ingredientLog)b.ingredientLog=[];
     if(!b.costLog)b.costLog=[];
+    if(b.archived===undefined)b.archived=false;
     if(b.bottleCount===undefined)b.bottleCount='';
     if(b.bottleSize===undefined)b.bottleSize='';
     if(b.bottles===undefined){
@@ -1041,7 +1047,7 @@ function updateHero(){
 
 function setFilter(f){
   activeFilter=f;
-  ['all','inprogress','finished'].forEach(k=>document.getElementById('filter-'+k).classList.toggle('active',k===f));
+  ['all','inprogress','finished','archived'].forEach(k=>document.getElementById('filter-'+k).classList.toggle('active',k===f));
   renderBatches();
 }
 
@@ -1164,16 +1170,18 @@ function calcABV(b){
 }
 
 function filteredBatches(){
-  if(activeFilter==='inprogress')return batches.filter(b=>b.status!=='bottled');
-  if(activeFilter==='finished')return batches.filter(b=>b.status==='bottled');
-  return batches;
+  if(activeFilter==='archived')return batches.filter(b=>b.archived);
+  const live=batches.filter(b=>!b.archived);
+  if(activeFilter==='inprogress')return live.filter(b=>b.status!=='bottled');
+  if(activeFilter==='finished')return live.filter(b=>b.status==='bottled');
+  return live;
 }
 
 function renderBatches(){
   const el=document.getElementById('batch-list');
   const list=filteredBatches();
   if(!list.length){
-    const msg=activeFilter==='finished'?'No finished brews yet.':activeFilter==='inprogress'?'No brews in progress.':'No brews yet — tap "+ New" to log your first batch.';
+    const msg=activeFilter==='finished'?'No finished brews yet.':activeFilter==='inprogress'?'No brews in progress.':activeFilter==='archived'?'No archived brews yet.':'No brews yet — tap "+ New" to log your first batch.';
     const icon=`<svg width="72" height="80" viewBox="0 0 72 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto 16px;display:block">
       <!-- airlock bulb on top -->
       <circle cx="36" cy="6" r="4" stroke="#EF9F27" stroke-width="1.4" fill="none" opacity="0.5"/>
@@ -1201,10 +1209,11 @@ function renderBatches(){
     const oc=overdueCount(b);
     const hasRealOverdue=(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today());
     const overdueHTML=oc>0?`<span class="${hasRealOverdue?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';
-    return `<div class="batch-card ${st.cardCls} brew-card-grad" onclick="showDetail('${b.id}')">
+    const archivedHTML=b.archived?'<span class="status-pill archived-pill">Archived</span>':'';
+    return `<div class="batch-card ${st.cardCls} brew-card-grad${b.archived?' archived':''}" onclick="showDetail('${b.id}')">
       <div class="batch-row">
         <span class="batch-name">${esc(b.name)}</span>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${overdueHTML}${archivedHTML}<span class="status-pill ${st.cls}">${st.short}</span></div>
       </div>
       <div class="batch-date">${fmtDate(b.startDate)||'No date'} · ${esc(b.qty)||'—'}${dayStr?' · '+dayStr:''}</div>
       <div class="meta-row">
@@ -1691,9 +1700,18 @@ function renderDetail(){
     ${bottleYieldHTML(b)}
     ${costTrackerHTML(b)}
 
+    ${(b.status==='bottled'||b.archived)?`<button class="btn-secondary" style="margin-top:1.5rem" onclick="toggleArchive('${b.id}')">${b.archived?'Unarchive brew':'Archive brew (fully consumed)'}</button>`:''}
     <button class="delete-btn" onclick="deleteBatch('${b.id}')">Delete brew</button>
   `;
   setTimeout(()=>renderSGChart(readings),50);
+}
+
+function toggleArchive(id){
+  const b=batches.find(x=>x.id===id);
+  if(!b)return;
+  b.archived=!b.archived;
+  if(currentBatch&&currentBatch.id===id)currentBatch=b;
+  save();renderDetail();renderBatches();
 }
 
 /* ---- LOG ACTIONS ---- */

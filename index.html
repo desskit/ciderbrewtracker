@@ -1205,7 +1205,7 @@ function renderBatches(){
     const st=STATUS[b.status||'primary'];
     const stageDate=(b.stageStartDates||{})[b.status];
     const days=stageDate?daysSince(stageDate):null;
-    const dayStr=days!==null&&b.status!=='bottled'?(days===0?'today':days+'d in stage'):'';
+    const dayStr=days!==null?(days===0?'today':days+'d '+(b.status==='bottled'?'bottled':'in stage')):'';
     const oc=overdueCount(b);
     const hasRealOverdue=(b.nutrientSchedule||[]).some(d=>!d.done&&d.date<today());
     const overdueHTML=oc>0?`<span class="${hasRealOverdue?'overdue-badge':'due-today-badge'}">${oc} dose${oc>1?'s':''} due</span>`:'';

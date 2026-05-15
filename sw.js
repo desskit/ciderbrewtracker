@@ -1,4 +1,4 @@
-const CACHE = 'cider-log-v7';
+const CACHE = 'cider-log-v8';
 const ASSETS = [
   '/',
   '/index.html',

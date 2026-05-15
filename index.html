@@ -141,6 +141,7 @@
     .sp-bottled { background: #eeeae4; color: #5F5E5A; }
     .archived-pill { background: #e8e3da; color: #6F6B62; }
     [data-theme="dark"] .archived-pill { background: #2a2520; color: #B4B2A9; }
+    [data-theme="dark"] .priming-result { background: #0d2b20 !important; color: #5DCAA5 !important; }
     .batch-card.archived { opacity: 0.7; }
     .batch-card.archived .batch-name { color: var(--text-muted); }
     .meta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
@@ -789,7 +790,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -1169,6 +1170,26 @@ function calcABV(b){
   return ((og-fg)*131.25).toFixed(2);
 }
 
+const SUGAR_FACTORS={sucrose:1.00,dextrose:0.91,dextrose_anhydrous:0.99,brown:0.98,honey:0.82,maple:0.66};
+const SUGAR_LABELS={sucrose:'Sucrose (table sugar)',dextrose:'Dextrose / corn sugar',dextrose_anhydrous:'Dextrose (anhydrous)',brown:'Brown / demerara',honey:'Honey',maple:'Maple syrup'};
+
+function primingABV(b){
+  const p=b.priming;
+  if(!p)return null;
+  const grams=parseFloat(p.sugar);
+  const vol=parseFloat(p.volume)||parseQtyLitres(b.qty);
+  if(!grams||!vol||grams<=0||vol<=0)return null;
+  const factor=SUGAR_FACTORS[p.type||'sucrose']||1;
+  return grams*factor/vol*0.06;
+}
+
+function calcTotalABV(b){
+  const primary=calcABV(b);
+  const priming=primingABV(b);
+  if(primary===null&&priming===null)return null;
+  return ((parseFloat(primary)||0)+(priming||0)).toFixed(2);
+}
+
 function filteredBatches(){
   if(activeFilter==='archived')return batches.filter(b=>b.archived);
   const live=batches.filter(b=>!b.archived);
@@ -1199,7 +1220,7 @@ function renderBatches(){
     el.innerHTML=`<div class="empty">${icon}<div class="empty-title">${msg}</div></div>`;return;
   }
   el.innerHTML=list.slice().reverse().map(b=>{
-    const abv=calcABV(b);
+    const abv=calcTotalABV(b);
     const readings=b.sgReadings||[];
     const lastSG=readings.length?readings[readings.length-1].val:(b.startingSG||'—');
     const st=STATUS[b.status||'primary'];
@@ -1639,7 +1660,9 @@ function deleteStageHistoryEntry(idx){
 /* ---- RENDER DETAIL ---- */
 function renderDetail(){
   const b=currentBatch;
-  const abv=calcABV(b);
+  const abv=calcTotalABV(b);
+  const abvPrimary=calcABV(b);
+  const abvPriming=primingABV(b);
   const readings=(b.sgReadings||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const curStatus=b.status||'primary';
   document.getElementById('detail-content').innerHTML=`
@@ -1670,7 +1693,7 @@ function renderDetail(){
         return `<div class="info-grid" style="grid-template-columns:1fr 1fr 1fr">
           <div class="info-card"><div class="info-label">Starting SG</div><div class="info-val">${b.startingSG||'—'}</div></div>
           <div class="info-card"><div class="info-label">Current SG</div><div class="info-val">${latestSG||'—'}${drop&&!sameAsOG?`<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:2px">▼ ${drop} pts</div>`:''}</div></div>
-          <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}</div></div>
+          <div class="info-card"><div class="info-label">Est. ABV</div><div class="info-val">${abv?'~'+abv+'%':'—'}${abvPriming?`<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:2px">${abvPrimary||'0.00'}% + ${abvPriming.toFixed(2)}% priming</div>`:''}</div></div>
         </div>`;
       })()}
       ${ingredientsDisplayHTML(b)}
@@ -1851,13 +1874,13 @@ function renderSGChart(readings){
 
 function renderStats(){
   const active=batches.filter(b=>b.status!=='bottled').length;
-  const abvVals=batches.map(b=>calcABV(b)).filter(Boolean).map(Number);
+  const abvVals=batches.map(b=>calcTotalABV(b)).filter(Boolean).map(Number);
   const avgABV=abvVals.length?(abvVals.reduce((a,b)=>a+b,0)/abvVals.length).toFixed(2):'—';
   const yeasts={};batches.forEach(b=>{if(b.yeast)yeasts[b.yeast]=(yeasts[b.yeast]||0)+1;});
   const topYeast=Object.entries(yeasts).sort((a,b)=>b[1]-a[1])[0];
 
   const highestABV=abvVals.length?Math.max(...abvVals).toFixed(2):null;
-  const highestABVBatch=highestABV?batches.find(b=>calcABV(b)===highestABV):null;
+  const highestABVBatch=highestABV?batches.find(b=>calcTotalABV(b)===highestABV):null;
 
   const ages=batches.map(b=>{
     if(!b.startDate)return null;
@@ -1887,7 +1910,7 @@ function renderStats(){
 
   const ctx=document.getElementById('stats-chart');
   if(statsChart){statsChart.destroy();statsChart=null;}
-  const abvData=batches.filter(b=>calcABV(b)).map(b=>({name:b.name,abv:parseFloat(calcABV(b))}));
+  const abvData=batches.filter(b=>calcTotalABV(b)).map(b=>({name:b.name,abv:parseFloat(calcTotalABV(b))}));
   if(abvData.length){
     statsChart=new Chart(ctx,{type:'bar',data:{
       labels:abvData.map(b=>b.name),
@@ -2004,7 +2027,49 @@ function bottleYieldHTML(b){
       ${t.totalL?`<span style="font-size:13px;color:var(--text-muted)">Total: <b style="color:var(--text)">${t.totalL.toFixed(2)}L</b></span>`:''}
       ${cpp?`<span style="font-size:13px;color:#085041">Cost/bottle: <b>${curr(cpp)}</b></span>`:''}
     </div>`:''}
+    ${primingFormHTML(b)}
   </div>`;
+}
+
+function primingFormHTML(b){
+  const p=b.priming||{};
+  const sugar=p.sugar||'';
+  const type=p.type||'sucrose';
+  const volume=p.volume||'';
+  const autoVol=parseQtyLitres(b.qty);
+  const volPlaceholder=autoVol?autoVol.toFixed(2):'e.g. 4';
+  const computed=primingABV(b);
+  const opts=Object.entries(SUGAR_LABELS).map(([k,v])=>`<option value="${k}"${type===k?' selected':''}>${v}</option>`).join('');
+  return `
+    <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+      <div style="font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Priming / natural carbonation</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Adds ABV from sugar fermented in-bottle.</div>
+      <div class="row2" style="margin-bottom:10px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Sugar (g)</label>
+          <input id="pr-sugar" type="number" min="0" step="0.1" placeholder="e.g. 30" value="${esc(sugar)}" onchange="savePriming()" />
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Sugar type</label>
+          <select id="pr-type" onchange="savePriming()">${opts}</select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Volume primed (L)</label>
+        <input id="pr-volume" type="number" min="0" step="0.1" placeholder="${volPlaceholder}" value="${esc(volume)}" onchange="savePriming()" />
+        ${autoVol?`<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Defaults to batch qty (${autoVol.toFixed(2)}L). Override if you lost more to lees.</div>`:''}
+      </div>
+      ${computed!==null?`<div style="margin-top:12px;padding:8px 10px;background:#E1F5EE;border-radius:8px;font-size:13px;color:#085041" class="priming-result">+${computed.toFixed(2)}% ABV from carbonation</div>`:''}
+    </div>`;
+}
+
+function savePriming(){
+  currentBatch.priming={
+    sugar:document.getElementById('pr-sugar')?.value||'',
+    type:document.getElementById('pr-type')?.value||'sucrose',
+    volume:document.getElementById('pr-volume')?.value||''
+  };
+  syncBatch();renderDetail();
 }
 
 function readBottleRows(){
@@ -2117,7 +2182,7 @@ function renderComparison(){
   const b=batches.find(b=>b.id===idB);
   if(!a||!b){el.innerHTML='';return;}
 
-  const abvA=calcABV(a),abvB=calcABV(b);
+  const abvA=calcTotalABV(a),abvB=calcTotalABV(b);
   const rdgsA=(a.sgReadings||[]).slice().sort((x,y)=>x.date.localeCompare(y.date));
   const rdgsB=(b.sgReadings||[]).slice().sort((x,y)=>x.date.localeCompare(y.date));
   const costA=(a.costLog||[]).reduce((s,e)=>s+parseFloat(e.cost||0),0);
@@ -2236,7 +2301,7 @@ function exportCSV(){
     const tastLog=JSON.stringify(b.tastingLog||[]);
     const stageHist=JSON.stringify(b.stageHistory||[]);
     const stageDates=JSON.stringify(b.stageStartDates||{});
-    rows.push([b.id||'',b.name||'',b.qty||'',b.startDate||'',b.status||'',b.juice||'',b.campden||'',b.pectic||'',b.acid||'',b.prefermOther||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.initialNutrient||'',b.pitchOther||'',b.startingSG||'',calcABV(b)||'',sgR,nutSched,nutLog,ingLog,tastLog,stageHist,stageDates]);
+    rows.push([b.id||'',b.name||'',b.qty||'',b.startDate||'',b.status||'',b.juice||'',b.campden||'',b.pectic||'',b.acid||'',b.prefermOther||'',b.yeast||'',b.sugarType||'',b.sugarQty||'',b.initialNutrient||'',b.pitchOther||'',b.startingSG||'',calcTotalABV(b)||'',sgR,nutSched,nutLog,ingLog,tastLog,stageHist,stageDates]);
   });
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});

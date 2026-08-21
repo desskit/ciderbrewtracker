@@ -793,7 +793,7 @@ function doseStatus(d){if(d.done)return'done';if(d.date<today())return'overdue';
 function overdueCount(b){return(b.nutrientSchedule||[]).filter(d=>!d.done&&d.date<=today()).length;}
 
 /* ---- APP VERSION ---- */
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.6.0';
 
 /* ---- PREFERENCES ---- */
 let prefs = {currency:'$', temp:'F', volume:'gal', dateFormat:'YYYY-MM-DD'};
@@ -1671,11 +1671,16 @@ function renderDetail(){
   const abvPriming=primingABV(b);
   const readings=(b.sgReadings||[]).slice().sort((a,c)=>a.date.localeCompare(c.date));
   const curStatus=b.status||'primary';
+  // Total age across every stage, frozen at the archive date for archived brews.
+  const totalAge=daysSinceFor(b,b.startDate);
+  const ageStr=totalAge===null?''
+    :totalAge===0?' · started today'
+    :' · '+fmtDuration(totalAge)+' old'+(b.archived?' (archived)':'');
   document.getElementById('detail-content').innerHTML=`
     <div class="detail-header">
       <div class="detail-header-left">
         <div class="detail-title">${esc(b.name)}</div>
-        <div class="detail-sub">Started ${fmtDate(b.startDate)||'—'} · ${esc(b.qty)||'—'}</div>
+        <div class="detail-sub">Started ${fmtDate(b.startDate)||'—'} · ${esc(b.qty)||'—'}${ageStr}</div>
       </div>
       <button id="edit-details-btn" class="edit-details-btn" onclick="showEditDetails()">Edit details</button>
     </div>
